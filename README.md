@@ -2,6 +2,8 @@
 
 A habit, challenge, and watchlist tracker with a samurai-inspired theme.
 
+**Live demo:** [bushido-tracker.vercel.app](https://bushido-tracker.vercel.app)
+
 ## Screenshots
 
 | | |

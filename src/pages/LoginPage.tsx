@@ -12,6 +12,7 @@ import { auth } from '@/firebase/config'
 import { ensureUserDocument, setDisplayName } from '@/services/user-service'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Field } from '@/components/ui/Field'
+import { PasswordField } from '@/components/ui/PasswordField'
 import { Button } from '@/components/ui/Button'
 
 const ERROR_KEYS: Record<string, string> = {
@@ -54,6 +55,7 @@ export const LoginPage = () => {
 
       navigate('/dashboard')
     } catch (error) {
+      console.error('Auth error:', error)
       setErrorMessage(friendlyError(error as AuthError))
       setIsSubmitting(false)
     }
@@ -68,6 +70,7 @@ export const LoginPage = () => {
       await ensureUserDocument(credential.user)
       navigate('/dashboard')
     } catch (error) {
+      console.error('Auth error:', error)
       setErrorMessage(friendlyError(error as AuthError))
       setIsSubmitting(false)
     }
@@ -98,9 +101,8 @@ export const LoginPage = () => {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          <Field
+          <PasswordField
             label={t('login.passwordLabel')}
-            type="password"
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
