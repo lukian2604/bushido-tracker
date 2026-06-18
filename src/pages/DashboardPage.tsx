@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { StatCard } from '@/components/ui/StatCard'
 import { Heatmap } from '@/components/ui/Heatmap'
 import { AreaChart, type ChartRange } from '@/components/ui/AreaChart'
@@ -24,6 +25,9 @@ export const DashboardPage = () => {
   const { user } = useAuth()
   const { t, locale } = useTranslation()
   const localeTag = BCP47_LOCALES[locale] || 'en-US'
+  const isMobile = useIsMobile()
+  const weeksCount = isMobile ? 9 : 18
+  const ringSize = isMobile ? 110 : 150
 
   const [trendSeries, setTrendSeries] = useState<WeeklyActivityDay[]>([])
   const [consistencyMap, setConsistencyMap] = useState<WeeklyActivityDay[]>([])
@@ -34,10 +38,14 @@ export const DashboardPage = () => {
   useEffect(() => {
     if (!user) return
     getHabitActivitySeries(user.uid, 365).then(setTrendSeries)
-    getConsistencyMap(user.uid, 18).then(setConsistencyMap)
     getChallengesOnce(user.uid).then(setChallenges)
     getAllCategoriesWithProgress(user.uid).then(setWatchlistCategories)
   }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    getConsistencyMap(user.uid, weeksCount).then(setConsistencyMap)
+  }, [user, weeksCount])
 
   const today = todayDateKey()
   const todayEntry = trendSeries[trendSeries.length - 1]
@@ -152,9 +160,11 @@ export const DashboardPage = () => {
       <div className="mb-6 grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-(--color-border) bg-(--color-ink-10) p-6 lg:col-span-2">
           <h2 className="font-accent text-lg font-semibold text-(--color-parchment)">{t('dashboard.consistencyMapTitle')}</h2>
-          <p className="mb-4 mt-1 text-sm text-(--color-ink-40)">{t('dashboard.consistencyMapSubtitle')}</p>
+          <p className="mb-4 mt-1 text-sm text-(--color-ink-40)">
+            {t('dashboard.consistencyMapSubtitle').replace('{weeks}', String(weeksCount))}
+          </p>
           {consistencyMap.length > 0 ? (
-            <Heatmap days={consistencyMap} weeksCount={18} />
+            <Heatmap days={consistencyMap} weeksCount={weeksCount} />
           ) : (
             <p className="py-10 text-center text-sm text-(--color-ink-40)">{t('dashboard.habitGridProgressEmpty')}</p>
           )}
@@ -171,7 +181,7 @@ export const DashboardPage = () => {
               max={todayEntry?.total || 1}
               label={t('dashboard.todaysProgressComplete')}
               color="var(--color-accent-blue)"
-              size={150}
+              size={ringSize}
             />
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3">

@@ -89,7 +89,7 @@ export default {
   'dashboard.weeklyGoalOf': '/',
   'dashboard.weeklyGoalCheckIns': 'チェックイン完了',
   'dashboard.consistencyMapTitle': '継続マップ',
-  'dashboard.consistencyMapSubtitle': '過去18週間のすべてのチェックイン',
+  'dashboard.consistencyMapSubtitle': '過去{weeks}週間のすべてのチェックイン',
   'dashboard.todaysProgressTitle': '今日の進捗',
   'dashboard.todaysProgressOf': '/',
   'dashboard.todaysProgressDone': '習慣完了',

@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithRedirect,
+  getRedirectResult,
   updateProfile,
   GoogleAuthProvider,
   type AuthError,
@@ -36,6 +37,22 @@ export const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState('')
 
   const friendlyError = (error: AuthError) => t(ERROR_KEYS[error.code] || 'error.generic')
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (credential) => {
+        if (!credential) {
+          return
+        }
+        await ensureUserDocument(credential.user)
+        navigate('/dashboard')
+      })
+      .catch((error) => {
+        console.error('Redirect result error:', error)
+        setErrorMessage(friendlyError(error as AuthError))
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()

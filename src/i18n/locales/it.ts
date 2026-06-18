@@ -89,7 +89,7 @@ export default {
   'dashboard.weeklyGoalOf': 'di',
   'dashboard.weeklyGoalCheckIns': 'check-in completati',
   'dashboard.consistencyMapTitle': 'Mappa di costanza',
-  'dashboard.consistencyMapSubtitle': 'Ogni check-in delle ultime 18 settimane',
+  'dashboard.consistencyMapSubtitle': 'Ogni check-in delle ultime {weeks} settimane',
   'dashboard.todaysProgressTitle': 'Progresso di oggi',
   'dashboard.todaysProgressOf': 'di',
   'dashboard.todaysProgressDone': 'abitudini completate',

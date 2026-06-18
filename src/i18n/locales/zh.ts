@@ -89,7 +89,7 @@ export default {
   'dashboard.weeklyGoalOf': '/',
   'dashboard.weeklyGoalCheckIns': '次打卡已完成',
   'dashboard.consistencyMapTitle': '坚持地图',
-  'dashboard.consistencyMapSubtitle': '过去18周的每一次打卡',
+  'dashboard.consistencyMapSubtitle': '过去{weeks}周的每一次打卡',
   'dashboard.todaysProgressTitle': '今日进度',
   'dashboard.todaysProgressOf': '/',
   'dashboard.todaysProgressDone': '个习惯已完成',

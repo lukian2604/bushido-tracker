@@ -89,7 +89,7 @@ export default {
   'dashboard.weeklyGoalOf': 'sur',
   'dashboard.weeklyGoalCheckIns': 'suivis effectués',
   'dashboard.consistencyMapTitle': 'Carte de régularité',
-  'dashboard.consistencyMapSubtitle': 'Chaque suivi des 18 dernières semaines',
+  'dashboard.consistencyMapSubtitle': 'Chaque suivi des {weeks} dernières semaines',
   'dashboard.todaysProgressTitle': 'Progression du jour',
   'dashboard.todaysProgressOf': 'sur',
   'dashboard.todaysProgressDone': 'habitudes accomplies',

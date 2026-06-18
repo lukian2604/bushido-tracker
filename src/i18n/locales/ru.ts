@@ -89,7 +89,7 @@ export default {
   'dashboard.weeklyGoalOf': 'из',
   'dashboard.weeklyGoalCheckIns': 'отметок выполнено',
   'dashboard.consistencyMapTitle': 'Карта постоянства',
-  'dashboard.consistencyMapSubtitle': 'Каждая отметка за последние 18 недель',
+  'dashboard.consistencyMapSubtitle': 'Каждая отметка за последние {weeks} недель',
   'dashboard.todaysProgressTitle': 'Прогресс сегодня',
   'dashboard.todaysProgressOf': 'из',
   'dashboard.todaysProgressDone': 'привычек выполнено',
