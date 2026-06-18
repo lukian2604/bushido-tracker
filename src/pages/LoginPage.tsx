@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   updateProfile,
   GoogleAuthProvider,
   type AuthError,
@@ -66,9 +66,7 @@ export const LoginPage = () => {
     setIsSubmitting(true)
 
     try {
-      const credential = await signInWithPopup(auth, new GoogleAuthProvider())
-      await ensureUserDocument(credential.user)
-      navigate('/dashboard')
+      await signInWithRedirect(auth, new GoogleAuthProvider())
     } catch (error) {
       console.error('Auth error:', error)
       setErrorMessage(friendlyError(error as AuthError))
