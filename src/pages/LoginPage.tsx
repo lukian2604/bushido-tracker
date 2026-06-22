@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   updateProfile,
@@ -83,10 +84,26 @@ export const LoginPage = () => {
     setIsSubmitting(true)
 
     try {
-      await signInWithRedirect(auth, new GoogleAuthProvider())
+      const credential = await signInWithPopup(auth, new GoogleAuthProvider())
+      await ensureUserDocument(credential.user)
+      navigate('/dashboard')
     } catch (error) {
-      console.error('Auth error:', error)
-      setErrorMessage(friendlyError(error as AuthError))
+      const authError = error as AuthError
+      console.error('Auth error:', authError)
+
+      if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/operation-not-supported-in-this-environment') {
+        try {
+          await signInWithRedirect(auth, new GoogleAuthProvider())
+          return
+        } catch (redirectError) {
+          console.error('Redirect fallback error:', redirectError)
+          setErrorMessage(friendlyError(redirectError as AuthError))
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      setErrorMessage(friendlyError(authError))
       setIsSubmitting(false)
     }
   }
