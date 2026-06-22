@@ -26,7 +26,9 @@ export const setDisplayName = (uid: string, displayName: string) => {
 }
 
 export const subscribeToUser = (uid: string, callback: (userDoc: UserDoc | null) => void) => {
-  return onSnapshot(doc(db, 'users', uid), (snapshot) => {
-    callback(snapshot.exists() ? (snapshot.data() as UserDoc) : null)
-  })
+  return onSnapshot(
+    doc(db, 'users', uid),
+    (snapshot) => callback(snapshot.exists() ? (snapshot.data() as UserDoc) : null),
+    () => {},
+  )
 }

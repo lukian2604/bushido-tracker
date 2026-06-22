@@ -17,9 +17,11 @@ const categoriesRef = (uid: string) => collection(db, 'users', uid, 'watchlistCa
 const itemsRef = (uid: string, categoryId: string) => collection(db, 'users', uid, 'watchlistCategories', categoryId, 'items')
 
 export const subscribeToCategories = (uid: string, callback: (categories: WatchlistCategory[]) => void) => {
-  return onSnapshot(query(categoriesRef(uid), orderBy('createdAt', 'asc')), (snapshot) => {
-    callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as WatchlistCategory)))
-  })
+  return onSnapshot(
+    query(categoriesRef(uid), orderBy('createdAt', 'asc')),
+    (snapshot) => callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as WatchlistCategory))),
+    () => {},
+  )
 }
 
 export const getAllCategoriesWithProgress = async (uid: string): Promise<WatchlistCategoryWithProgress[]> => {
@@ -47,9 +49,11 @@ export const updateCategory = (uid: string, categoryId: string, name: string) =>
 }
 
 export const subscribeToItems = (uid: string, categoryId: string, callback: (items: WatchlistItem[]) => void) => {
-  return onSnapshot(query(itemsRef(uid, categoryId), orderBy('createdAt', 'asc')), (snapshot) => {
-    callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as WatchlistItem)))
-  })
+  return onSnapshot(
+    query(itemsRef(uid, categoryId), orderBy('createdAt', 'asc')),
+    (snapshot) => callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as WatchlistItem))),
+    () => {},
+  )
 }
 
 export interface WatchlistItemInput {

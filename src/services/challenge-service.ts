@@ -18,9 +18,11 @@ import type { Challenge, ChallengeMode } from '@/lib/types'
 const challengesRef = (uid: string) => collection(db, 'users', uid, 'challenges')
 
 export const subscribeToChallenges = (uid: string, callback: (challenges: Challenge[]) => void) => {
-  return onSnapshot(query(challengesRef(uid), orderBy('createdAt', 'desc')), (snapshot) => {
-    callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Challenge)))
-  })
+  return onSnapshot(
+    query(challengesRef(uid), orderBy('createdAt', 'desc')),
+    (snapshot) => callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Challenge))),
+    () => {},
+  )
 }
 
 export const getChallengesOnce = async (uid: string): Promise<Challenge[]> => {

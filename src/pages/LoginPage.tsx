@@ -6,6 +6,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  sendPasswordResetEmail,
   updateProfile,
   GoogleAuthProvider,
   type AuthError,
@@ -25,17 +26,20 @@ const ERROR_KEYS: Record<string, string> = {
   'auth/email-already-in-use': 'error.emailInUse',
   'auth/weak-password': 'error.weakPassword',
   'auth/popup-closed-by-user': 'error.popupClosed',
+  'auth/web-storage-unsupported': 'error.webStorageBlocked',
+  'auth/unauthorized-domain': 'error.unauthorizedDomain',
 }
 
 export const LoginPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const friendlyError = (error: AuthError) => t(ERROR_KEYS[error.code] || 'error.generic')
 
@@ -54,6 +58,23 @@ export const LoginPage = () => {
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const onForgotSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setErrorMessage('')
+    setSuccessMessage('')
+    setIsSubmitting(true)
+
+    try {
+      await sendPasswordResetEmail(auth, email.trim())
+      setSuccessMessage(t('login.resetEmailSent'))
+    } catch (error) {
+      console.error('Auth error:', error)
+      setErrorMessage(friendlyError(error as AuthError))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -108,6 +129,44 @@ export const LoginPage = () => {
     }
   }
 
+  if (mode === 'forgot') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-(--color-ink) px-4">
+        <div className="w-full max-w-130 rounded-2xl border border-(--color-border) bg-(--color-ink-10) p-10">
+          <h1 className="text-center font-accent text-2xl font-semibold text-(--color-parchment)">{t('login.forgotTitle')}</h1>
+          <p className="mb-7 text-center text-sm text-(--color-parchment-muted)">{t('login.forgotSubtitle')}</p>
+
+          <form onSubmit={onForgotSubmit} className="flex flex-col gap-4.5">
+            <Field
+              label={t('login.emailLabel')}
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+
+            {errorMessage && <p className="text-sm text-(--color-accent)">{errorMessage}</p>}
+            {successMessage && <p className="text-sm text-(--color-accent-green)">{successMessage}</p>}
+
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? t('login.submittingButton') : t('login.resetButton')}
+            </Button>
+          </form>
+
+          <p className="mt-5 text-center text-sm">
+            <button
+              type="button"
+              onClick={() => { setMode('signin'); setErrorMessage(''); setSuccessMessage('') }}
+              className="text-(--color-gold) hover:underline"
+            >
+              {t('login.backToSignin')}
+            </button>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-(--color-ink) px-4">
       <div className="w-full max-w-130 rounded-2xl border border-(--color-border) bg-(--color-ink-10) p-10">
@@ -133,12 +192,23 @@ export const LoginPage = () => {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          <PasswordField
-            label={t('login.passwordLabel')}
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <div>
+            <PasswordField
+              label={t('login.passwordLabel')}
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            {mode === 'signin' && (
+              <button
+                type="button"
+                onClick={() => { setMode('forgot'); setErrorMessage(''); setSuccessMessage('') }}
+                className="mt-1.5 text-xs text-(--color-gold) hover:underline"
+              >
+                {t('login.forgotPasswordLink')}
+              </button>
+            )}
+          </div>
 
           {errorMessage && <p className="text-sm text-(--color-accent)">{errorMessage}</p>}
 
@@ -157,6 +227,7 @@ export const LoginPage = () => {
           <img src="/icons/google.svg" alt="" width={18} height={18} />
           {t('login.googleButton')}
         </Button>
+        <p className="mt-2 text-center text-xs text-(--color-ink-40)">{t('login.googleHint')}</p>
 
         <p className="mt-5 text-center text-sm">
           <button

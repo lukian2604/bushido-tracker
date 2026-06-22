@@ -37,14 +37,14 @@ export const DashboardPage = () => {
 
   useEffect(() => {
     if (!user) return
-    getHabitActivitySeries(user.uid, 365).then(setTrendSeries)
-    getChallengesOnce(user.uid).then(setChallenges)
-    getAllCategoriesWithProgress(user.uid).then(setWatchlistCategories)
+    getHabitActivitySeries(user.uid, 365).then(setTrendSeries).catch(() => {})
+    getChallengesOnce(user.uid).then(setChallenges).catch(() => {})
+    getAllCategoriesWithProgress(user.uid).then(setWatchlistCategories).catch(() => {})
   }, [user])
 
   useEffect(() => {
     if (!user) return
-    getConsistencyMap(user.uid, weeksCount).then(setConsistencyMap)
+    getConsistencyMap(user.uid, weeksCount).then(setConsistencyMap).catch(() => {})
   }, [user, weeksCount])
 
   const today = todayDateKey()

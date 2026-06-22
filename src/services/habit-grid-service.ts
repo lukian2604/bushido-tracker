@@ -19,9 +19,11 @@ const monthRef = (uid: string, yearMonth: string) => doc(db, 'users', uid, 'habi
 const habitsRef = (uid: string) => collection(db, 'users', uid, 'habitGridHabits')
 
 export const subscribeToHabits = (uid: string, callback: (habits: Habit[]) => void) => {
-  return onSnapshot(query(habitsRef(uid), orderBy('createdAt', 'asc')), (snapshot) => {
-    callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Habit)))
-  })
+  return onSnapshot(
+    query(habitsRef(uid), orderBy('createdAt', 'asc')),
+    (snapshot) => callback(snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Habit))),
+    () => {},
+  )
 }
 
 export const addHabit = (uid: string, name: string) => {
@@ -145,9 +147,11 @@ export const getConsistencyMap = async (uid: string, weeksCount = 18): Promise<W
 }
 
 export const subscribeToMonth = (uid: string, yearMonth: string, callback: (data: HabitMonthDoc) => void) => {
-  return onSnapshot(monthRef(uid, yearMonth), (snapshot) => {
-    callback(snapshot.exists() ? (snapshot.data() as HabitMonthDoc) : { days: {} })
-  })
+  return onSnapshot(
+    monthRef(uid, yearMonth),
+    (snapshot) => callback(snapshot.exists() ? (snapshot.data() as HabitMonthDoc) : { days: {} }),
+    () => {},
+  )
 }
 
 export const toggleCell = async (uid: string, yearMonth: string, day: number, habitId: string, value: boolean) => {
