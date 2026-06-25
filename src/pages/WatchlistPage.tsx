@@ -17,14 +17,16 @@ import {
   addItem,
   updateItem,
   markWatched,
+  updateWatchedAt,
   deleteItem,
 } from '@/services/watchlist-service'
-import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '@/lib/types'
+import type { MediaType, WatchlistCategory, WatchlistItem, WatchlistStatus } from '@/lib/types'
+import type { Timestamp } from 'firebase/firestore'
 
 const STATUSES: WatchlistStatus[] = ['planToWatch', 'watching', 'completed', 'onHold', 'dropped']
+const MEDIA_TYPES: MediaType[] = ['video', 'book', 'manga', 'audiobook', 'game']
 
-const formatWatchedAt = (timestamp: WatchlistItem['watchedAt']) => {
-  if (!timestamp) return ''
+const formatWatchedAt = (timestamp: Timestamp) => {
   const date = timestamp.toDate()
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -33,12 +35,18 @@ const formatWatchedAt = (timestamp: WatchlistItem['watchedAt']) => {
   return `${day}.${month}.${date.getFullYear()} - ${hours}:${minutes}`
 }
 
-const EMPTY_FORM = { title: '', year: '', studio: '', status: 'planToWatch' as WatchlistStatus }
+const toDatetimeLocal = (timestamp: Timestamp): string => {
+  const d = timestamp.toDate()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const EMPTY_FORM = { title: '', year: '', studio: '', author: '', status: 'planToWatch' as WatchlistStatus }
 
 export const WatchlistPage = () => {
   const { user } = useAuth()
   const { t } = useTranslation()
-  const { confirmDialog, promptDialog } = useModal()
+  const { confirmDialog } = useModal()
 
   const [categories, setCategories] = useState<WatchlistCategory[]>([])
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
@@ -47,7 +55,11 @@ export const WatchlistPage = () => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [isItemFormOpen, setIsItemFormOpen] = useState(false)
   const [categoryInput, setCategoryInput] = useState('')
+  const [newCategoryMediaType, setNewCategoryMediaType] = useState<MediaType>('video')
+  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; mediaType: MediaType } | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [editingWatchedAtId, setEditingWatchedAtId] = useState<string | null>(null)
+  const [watchedAtInput, setWatchedAtInput] = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -70,28 +82,48 @@ export const WatchlistPage = () => {
     return subscribeToItems(user.uid, activeCategoryId, setItems)
   }, [user, activeCategoryId])
 
+  const activeCategory = categories.find((c) => c.id === activeCategoryId)
+  const mediaType: MediaType = activeCategory?.mediaType || 'video'
+  const hasAuthor = ['book', 'manga', 'audiobook'].includes(mediaType)
+  const completedVerb = t(`watchlist.completedVerb.${mediaType}`)
+  const studioLabel = t(`watchlist.studio.${mediaType}`)
+
+  const getStatusLabel = (status: WatchlistStatus): string => {
+    if (status === 'planToWatch') return t(`watchlist.planToWatch.${mediaType}`)
+    if (status === 'watching') return t(`watchlist.watching.${mediaType}`)
+    return t(`watchlist.status.${status}`)
+  }
+
   const selectCategory = (categoryId: string) => {
     setActiveCategoryId(categoryId)
     setStatusFilter('all')
     setEditingItemId(null)
     setIsItemFormOpen(false)
     setForm(EMPTY_FORM)
+    setEditingCategory(null)
+    setEditingWatchedAtId(null)
   }
 
   const onCategorySubmit = async (event: FormEvent) => {
     event.preventDefault()
     const name = categoryInput.trim()
     if (!user || !name) return
-    await createCategory(user.uid, name)
+    await createCategory(user.uid, name, newCategoryMediaType)
     setCategoryInput('')
+    setNewCategoryMediaType('video')
   }
 
-  const onEditCategory = async (category: WatchlistCategory) => {
-    if (!user) return
-    const newName = await promptDialog(t('watchlist.renamePrompt'), { defaultValue: category.name })
-    if (newName) {
-      await updateCategory(user.uid, category.id, newName)
-    }
+  const onStartEditCategory = (category: WatchlistCategory) => {
+    setEditingCategory({ id: category.id, name: category.name, mediaType: category.mediaType || 'video' })
+  }
+
+  const onSaveEditCategory = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!user || !editingCategory) return
+    const name = editingCategory.name.trim()
+    if (!name) return
+    await updateCategory(user.uid, editingCategory.id, { name, mediaType: editingCategory.mediaType })
+    setEditingCategory(null)
   }
 
   const onDeleteCategory = async (categoryId: string) => {
@@ -129,7 +161,7 @@ export const WatchlistPage = () => {
   }
 
   const onEditItem = (item: WatchlistItem) => {
-    setForm({ title: item.title, year: item.year, studio: item.studio, status: item.status })
+    setForm({ title: item.title, year: item.year, studio: item.studio, author: item.author || '', status: item.status })
     setEditingItemId(item.id)
     setIsItemFormOpen(true)
   }
@@ -141,18 +173,47 @@ export const WatchlistPage = () => {
     }
   }
 
+  const onStartEditWatchedAt = (item: WatchlistItem) => {
+    if (!item.watchedAt) return
+    setEditingWatchedAtId(item.id)
+    setWatchedAtInput(toDatetimeLocal(item.watchedAt))
+  }
+
+  const onSaveWatchedAt = async (itemId: string) => {
+    if (!user || !activeCategoryId) return
+    const date = watchedAtInput ? new Date(watchedAtInput) : null
+    await updateWatchedAt(user.uid, activeCategoryId, itemId, date)
+    setEditingWatchedAtId(null)
+  }
+
   const filteredItems = useMemo(
     () => (statusFilter === 'all' ? items : items.filter((item) => item.status === statusFilter)),
     [items, statusFilter],
   )
 
-  const statusOptions = STATUSES.map((status) => ({ value: status, label: t(`watchlist.status.${status}`) }))
+  const statusOptions = STATUSES.map((status) => ({ value: status, label: getStatusLabel(status) }))
+
+  const mediaTypePills = (selected: MediaType, onSelect: (type: MediaType) => void) =>
+    MEDIA_TYPES.map((type) => (
+      <button
+        key={type}
+        type="button"
+        onClick={() => onSelect(type)}
+        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+          selected === type
+            ? 'border-(--color-gold) text-(--color-gold)'
+            : 'border-(--color-border) text-(--color-parchment-muted) hover:border-(--color-parchment-muted)'
+        }`}
+      >
+        {t(`watchlist.mediaType.${type}`)}
+      </button>
+    ))
 
   return (
     <div>
       <PageHeader title={t('watchlist.heading')} subtitle={t('watchlist.subtitle')} />
 
-      <form onSubmit={onCategorySubmit} className="mb-4 flex gap-3">
+      <form onSubmit={onCategorySubmit} className="mb-3 flex gap-3">
         <Field
           containerClassName="flex-grow"
           placeholder={t('watchlist.newCategoryPlaceholder')}
@@ -163,10 +224,14 @@ export const WatchlistPage = () => {
         <Button type="submit">{t('watchlist.addCategoryButton')}</Button>
       </form>
 
+      <div className="mb-5 flex flex-wrap gap-2">
+        {mediaTypePills(newCategoryMediaType, setNewCategoryMediaType)}
+      </div>
+
       {categories.length === 0 ? (
         <p className="py-6 text-center text-sm text-(--color-ink-40)">{t('watchlist.emptyCategories')}</p>
       ) : (
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {categories.map((category) => (
             <span
               key={category.id}
@@ -181,7 +246,7 @@ export const WatchlistPage = () => {
               >
                 {category.name}
               </button>
-              <IconButton variant="edit" onClick={() => onEditCategory(category)} aria-label={t('common.edit')}>
+              <IconButton variant="edit" onClick={() => onStartEditCategory(category)} aria-label={t('common.edit')}>
                 <EditIcon className="size-3.5" />
               </IconButton>
               <IconButton variant="delete" onClick={() => onDeleteCategory(category.id)} aria-label={t('common.delete')} className="mr-1">
@@ -190,6 +255,27 @@ export const WatchlistPage = () => {
             </span>
           ))}
         </div>
+      )}
+
+      {editingCategory && (
+        <form onSubmit={onSaveEditCategory} className="mb-6 rounded-2xl border border-(--color-border) bg-(--color-ink-10) p-4">
+          <h3 className="mb-3 font-accent text-sm font-semibold text-(--color-parchment)">{t('watchlist.editCategoryTitle')}</h3>
+          <div className="mb-3 flex gap-3">
+            <Field
+              containerClassName="flex-grow"
+              value={editingCategory.name}
+              onChange={(e) => setEditingCategory((curr) => curr ? { ...curr, name: e.target.value } : null)}
+              required
+            />
+            <Button type="submit">{t('common.save')}</Button>
+            <Button type="button" variant="ghost" onClick={() => setEditingCategory(null)}>{t('common.cancel')}</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {mediaTypePills(editingCategory.mediaType, (type) =>
+              setEditingCategory((curr) => curr ? { ...curr, mediaType: type } : null),
+            )}
+          </div>
+        </form>
       )}
 
       {activeCategoryId && !isItemFormOpen && (
@@ -216,8 +302,15 @@ export const WatchlistPage = () => {
               value={form.year}
               onChange={(event) => setForm((current) => ({ ...current, year: event.target.value }))}
             />
+            {hasAuthor && (
+              <Field
+                label={t('watchlist.authorLabel')}
+                value={form.author}
+                onChange={(event) => setForm((current) => ({ ...current, author: event.target.value }))}
+              />
+            )}
             <Field
-              label={t('watchlist.studioLabel')}
+              label={studioLabel}
               value={form.studio}
               onChange={(event) => setForm((current) => ({ ...current, studio: event.target.value }))}
             />
@@ -253,7 +346,7 @@ export const WatchlistPage = () => {
                     : 'border-(--color-border) text-(--color-parchment-muted)'
                 }`}
               >
-                {status === 'all' ? t('watchlist.statusFilterAll') : t(`watchlist.status.${status}`)}
+                {status === 'all' ? t('watchlist.statusFilterAll') : getStatusLabel(status)}
               </button>
             ))}
           </div>
@@ -265,7 +358,15 @@ export const WatchlistPage = () => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {[t('watchlist.tableTitle'), t('watchlist.tableYear'), t('watchlist.tableStudio'), t('watchlist.tableStatus'), t('watchlist.tableWatched'), ''].map((label, index) => (
+                    {[
+                      t('watchlist.tableTitle'),
+                      t('watchlist.tableYear'),
+                      ...(hasAuthor ? [t('watchlist.authorLabel')] : []),
+                      studioLabel,
+                      t('watchlist.tableStatus'),
+                      completedVerb,
+                      '',
+                    ].map((label, index) => (
                       <th key={index} className="border-b border-(--color-border) p-3 text-left text-xs font-semibold uppercase tracking-wide text-(--color-ink-40)">
                         {label}
                       </th>
@@ -275,19 +376,60 @@ export const WatchlistPage = () => {
                 <tbody>
                   {filteredItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment)">{item.title}</td>
+                      <td className="border-b border-(--color-border) p-3 text-sm font-medium text-(--color-parchment)">{item.title}</td>
                       <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">{item.year || '—'}</td>
+                      {hasAuthor && (
+                        <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">{item.author || '—'}</td>
+                      )}
                       <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">{item.studio || '—'}</td>
-                      <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">{t(`watchlist.status.${item.status}`)}</td>
+                      <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">{getStatusLabel(item.status)}</td>
                       <td className="border-b border-(--color-border) p-3 text-sm text-(--color-parchment-muted)">
-                        <label className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={!!item.watchedAt}
-                            onChange={(event) => markWatched(user!.uid, activeCategoryId, item.id, event.target.checked)}
+                            onChange={(event) => {
+                              markWatched(user!.uid, activeCategoryId, item.id, event.target.checked)
+                              if (!event.target.checked) setEditingWatchedAtId(null)
+                            }}
                           />
-                          {item.watchedAt ? `${t('watchlist.watchedPrefix')}: ${formatWatchedAt(item.watchedAt)}` : t('watchlist.markWatched')}
-                        </label>
+                          {item.watchedAt ? (
+                            editingWatchedAtId === item.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  type="datetime-local"
+                                  value={watchedAtInput}
+                                  onChange={(e) => setWatchedAtInput(e.target.value)}
+                                  className="rounded-lg border border-(--color-border) bg-(--color-ink) px-2 py-1 text-xs text-(--color-parchment) outline-none focus:border-(--color-accent)"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => onSaveWatchedAt(item.id)}
+                                  className="text-sm font-semibold text-(--color-accent-green) hover:opacity-80"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingWatchedAtId(null)}
+                                  className="text-sm text-(--color-ink-40) hover:text-(--color-parchment-muted)"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => onStartEditWatchedAt(item)}
+                                className="text-left text-sm text-(--color-parchment-muted) hover:text-(--color-parchment)"
+                              >
+                                {completedVerb}: {formatWatchedAt(item.watchedAt)}
+                              </button>
+                            )
+                          ) : (
+                            <span className="text-sm text-(--color-ink-40)">{t(`watchlist.markLabel.${mediaType}`)}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="border-b border-(--color-border) p-3">
                         <div className="flex gap-1">

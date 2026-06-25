@@ -144,7 +144,7 @@ export const HabitGridPage = () => {
                   {t('habitGrid.dayColumn')}
                 </th>
                 {habits.map((habit) => (
-                  <th key={habit.id} className="p-2.5 text-left text-xs uppercase tracking-wide text-(--color-ink-40)">
+                  <th key={habit.id} className="p-2.5 text-center text-xs uppercase tracking-wide text-(--color-ink-40)">
                     {habit.name}
                   </th>
                 ))}
@@ -164,7 +164,7 @@ export const HabitGridPage = () => {
                     {habits.map((habit) => {
                       const isChecked = !!dayData[habit.id]
                       return (
-                        <td key={habit.id} className="p-2.5">
+                        <td key={habit.id} className="p-2.5 text-center">
                           <button
                             type="button"
                             onClick={() => onToggleCell(day, habit.id, isChecked)}

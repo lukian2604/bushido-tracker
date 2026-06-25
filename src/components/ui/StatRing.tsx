@@ -33,8 +33,9 @@ export const StatRing = ({ value, max, label, color = 'var(--color-gold)', size 
         />
         <text
           x="45"
-          y="50"
+          y="45"
           textAnchor="middle"
+          dominantBaseline="central"
           className="fill-(--color-parchment) font-accent font-bold"
           style={{ fontSize }}
         >

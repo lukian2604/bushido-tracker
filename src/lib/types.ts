@@ -30,9 +30,12 @@ export interface Challenge {
 
 export type WatchlistStatus = 'planToWatch' | 'watching' | 'completed' | 'onHold' | 'dropped'
 
+export type MediaType = 'video' | 'book' | 'manga' | 'audiobook' | 'game'
+
 export interface WatchlistCategory {
   id: string
   name: string
+  mediaType?: MediaType
   createdAt: Timestamp | null
 }
 
@@ -46,6 +49,7 @@ export interface WatchlistItem {
   title: string
   year: string
   studio: string
+  author?: string
   status: WatchlistStatus
   watchedAt: Timestamp | null
   createdAt: Timestamp | null

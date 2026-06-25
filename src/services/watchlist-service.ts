@@ -9,9 +9,10 @@ import {
   query,
   orderBy,
   getDocs,
+  Timestamp,
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import type { WatchlistCategory, WatchlistCategoryWithProgress, WatchlistItem, WatchlistStatus } from '@/lib/types'
+import type { MediaType, WatchlistCategory, WatchlistCategoryWithProgress, WatchlistItem, WatchlistStatus } from '@/lib/types'
 
 const categoriesRef = (uid: string) => collection(db, 'users', uid, 'watchlistCategories')
 const itemsRef = (uid: string, categoryId: string) => collection(db, 'users', uid, 'watchlistCategories', categoryId, 'items')
@@ -36,16 +37,16 @@ export const getAllCategoriesWithProgress = async (uid: string): Promise<Watchli
   }))
 }
 
-export const createCategory = (uid: string, name: string) => {
-  return addDoc(categoriesRef(uid), { name, createdAt: serverTimestamp() })
+export const createCategory = (uid: string, name: string, mediaType: MediaType = 'video') => {
+  return addDoc(categoriesRef(uid), { name, mediaType, createdAt: serverTimestamp() })
 }
 
 export const deleteCategory = (uid: string, categoryId: string) => {
   return deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId))
 }
 
-export const updateCategory = (uid: string, categoryId: string, name: string) => {
-  return updateDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId), { name })
+export const updateCategory = (uid: string, categoryId: string, data: { name?: string; mediaType?: MediaType }) => {
+  return updateDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId), data)
 }
 
 export const subscribeToItems = (uid: string, categoryId: string, callback: (items: WatchlistItem[]) => void) => {
@@ -60,14 +61,16 @@ export interface WatchlistItemInput {
   title: string
   year: string
   studio: string
+  author: string
   status: WatchlistStatus
 }
 
-export const addItem = (uid: string, categoryId: string, { title, year, studio, status }: WatchlistItemInput) => {
+export const addItem = (uid: string, categoryId: string, { title, year, studio, author, status }: WatchlistItemInput) => {
   return addDoc(itemsRef(uid, categoryId), {
     title,
     year,
     studio,
+    ...(author ? { author } : {}),
     status,
     watchedAt: null,
     createdAt: serverTimestamp(),
@@ -82,9 +85,14 @@ export const markWatched = (uid: string, categoryId: string, itemId: string, isW
   })
 }
 
-export const updateItem = (uid: string, categoryId: string, itemId: string, { title, year, studio, status }: WatchlistItemInput) => {
+export const updateWatchedAt = (uid: string, categoryId: string, itemId: string, date: Date | null) => {
   const itemRef = doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId)
-  return updateDoc(itemRef, { title, year, studio, status })
+  return updateDoc(itemRef, { watchedAt: date ? Timestamp.fromDate(date) : null })
+}
+
+export const updateItem = (uid: string, categoryId: string, itemId: string, { title, year, studio, author, status }: WatchlistItemInput) => {
+  const itemRef = doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId)
+  return updateDoc(itemRef, { title, year, studio, ...(author ? { author } : {}), status })
 }
 
 export const deleteItem = (uid: string, categoryId: string, itemId: string) => {
