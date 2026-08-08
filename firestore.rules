@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Funzioni helper di validazione
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+    
+    function isValidString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) 
+        && isValidString(request.resource.data.displayName, 50)
+        && request.resource.data.email is string;
+
+      // 1. Challenges
+      match /challenges/{challengeId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isValidString(request.resource.data.name, 100)
+          && request.resource.data.mode in ['manual', 'auto'];
+      }
+
+      // 2. Habit Grid Habits
+      match /habitGridHabits/{habitId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isValidString(request.resource.data.name, 100);
+      }
+
+      // 3. Habit Grid Months (YYYY-MM)
+      match /habitGridMonths/{yearMonth} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // 4. Watchlist Categories
+      match /watchlistCategories/{categoryId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isValidString(request.resource.data.name, 50);
+
+        // 5. Watchlist Items
+        match /items/{itemId} {
+          allow read, delete: if isOwner(uid);
+          allow create, update: if isOwner(uid)
+            && isValidString(request.resource.data.title, 150)
+            && request.resource.data.status in ['planToWatch', 'watching', 'completed', 'onHold', 'dropped'];
+        }
+      }
+    }
+  }
+}

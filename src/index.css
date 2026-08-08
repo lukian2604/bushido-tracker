@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/ShipporiMincho-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/ShipporiMincho-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Shippori Mincho';
+  src: url('/fonts/ShipporiMincho-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-accent: 'Shippori Mincho', serif;
+}
+
+:root {
+  --color-ink: #14110f;
+  --color-ink-10: #1c1815;
+  --color-ink-15: #28221d;
+  --color-ink-20: #3a322a;
+  --color-ink-40: #5c5147;
+
+  --color-parchment: #f2ead8;
+  --color-parchment-muted: #b8ac95;
+
+  --color-accent: #b5332b;
+  --color-gold: #c9a24b;
+  --color-accent-green: #3a9d72;
+  --color-accent-blue: #3b7fc4;
+
+  --color-surface: var(--color-ink-10);
+  --color-surface-muted: var(--color-ink-15);
+  --color-border: var(--color-ink-15);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --color-ink: #faf6ec;
+  --color-ink-10: #ffffff;
+  --color-ink-15: #e2d6b8;
+  --color-ink-20: #d6c7a0;
+  --color-ink-40: #8c7f68;
+
+  --color-parchment: #211c16;
+  --color-parchment-muted: #5c5147;
+
+  --color-gold: #8a6a1f;
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-ink-10: var(--color-ink-10);
+  --color-ink-15: var(--color-ink-15);
+  --color-ink-20: var(--color-ink-20);
+  --color-ink-40: var(--color-ink-40);
+  --color-parchment: var(--color-parchment);
+  --color-parchment-muted: var(--color-parchment-muted);
+  --color-accent: var(--color-accent);
+  --color-gold: var(--color-gold);
+  --color-accent-green: var(--color-accent-green);
+  --color-accent-blue: var(--color-accent-blue);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-ink);
+  color: var(--color-parchment);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-accent);
+}

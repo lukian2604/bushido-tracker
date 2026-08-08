@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /dashboard
+Disallow: /challenge
+Disallow: /habit-grid
+Disallow: /watchlist
+Disallow: /profile
+
+Sitemap: https://bushido-tracker.vercel.app/sitemap.xml
