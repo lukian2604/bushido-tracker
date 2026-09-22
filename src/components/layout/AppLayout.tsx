@@ -2,12 +2,20 @@ import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { MenuIcon } from '@/components/ui/icons'
+import { LevelUpModal } from '@/components/ui/LevelUpModal'
+import { useLevelUpWatcher } from '@/hooks/useLevelUpWatcher'
+import { usePublicProfileSync } from '@/hooks/usePublicProfileSync'
+import { useStreakMilestoneWatcher } from '@/hooks/useStreakMilestoneWatcher'
 
 export const AppLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { levelUpRank, dismiss } = useLevelUpWatcher()
+  usePublicProfileSync()
+  useStreakMilestoneWatcher()
 
   return (
     <div className="min-h-screen bg-(--color-ink)">
+      {levelUpRank && <LevelUpModal rank={levelUpRank} onClose={dismiss} />}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex min-h-screen flex-col md:pl-64">
         <header className="flex items-center justify-between border-b border-(--color-border) px-4 py-3 md:hidden">

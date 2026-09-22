@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     return onAuthStateChanged(auth, async (nextUser) => {
       if (nextUser) {
-        await ensureUserDocument(nextUser)
+        await ensureUserDocument(nextUser).catch((error) => console.error('ensureUserDocument failed:', error))
       }
       setUser(nextUser)
       setIsLoading(false)

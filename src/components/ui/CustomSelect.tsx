@@ -6,9 +6,10 @@ interface CustomSelectProps {
   onChange: (value: string) => void
   options: { value: string; label: string }[]
   label?: string
+  openUpward?: boolean
 }
 
-export const CustomSelect = ({ value, onChange, options, label }: CustomSelectProps) => {
+export const CustomSelect = ({ value, onChange, options, label, openUpward = false }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const current = options.find((option) => option.value === value)
@@ -46,7 +47,9 @@ export const CustomSelect = ({ value, onChange, options, label }: CustomSelectPr
         {isOpen && (
           <ul
             role="listbox"
-            className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-60 overflow-y-auto rounded-xl border border-(--color-border) bg-(--color-surface) p-1.5 shadow-xl"
+            className={`absolute left-0 right-0 z-20 max-h-60 overflow-y-auto rounded-xl border border-(--color-border) bg-(--color-surface) p-1.5 shadow-xl ${
+              openUpward ? 'bottom-[calc(100%+6px)]' : 'top-[calc(100%+6px)]'
+            }`}
           >
             {options.map((option) => (
               <li key={option.value} role="presentation">
