@@ -26,16 +26,16 @@ export const subscribeToHabits = (uid: string, callback: (habits: Habit[]) => vo
   )
 }
 
-export const addHabit = (uid: string, name: string) => {
-  return addDoc(habitsRef(uid), { name, createdAt: serverTimestamp() })
+export const addHabit = (uid: string, name: string, color: string) => {
+  return addDoc(habitsRef(uid), { name, color, createdAt: serverTimestamp() })
 }
 
 export const deleteHabit = (uid: string, habitId: string) => {
   return deleteDoc(doc(db, 'users', uid, 'habitGridHabits', habitId))
 }
 
-export const updateHabit = (uid: string, habitId: string, name: string) => {
-  return updateDoc(doc(db, 'users', uid, 'habitGridHabits', habitId), { name })
+export const updateHabit = (uid: string, habitId: string, name: string, color: string) => {
+  return updateDoc(doc(db, 'users', uid, 'habitGridHabits', habitId), { name, color })
 }
 
 const daysInMonthLocal = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
