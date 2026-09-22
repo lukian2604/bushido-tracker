@@ -80,12 +80,30 @@
   --color-surface-muted: var(--color-ink-15);
   --color-border: var(--color-ink-15);
 
+  --color-rank-ronin: #9a978d;
+  --color-rank-ashigaru: var(--color-accent-green);
+  --color-rank-samurai: var(--color-accent);
+  --color-rank-daimyo: #8768c9;
+  --color-rank-shogun: var(--color-gold);
+
+  --color-type-video: var(--color-accent-blue);
+  --color-type-book: var(--color-gold);
+  --color-type-manga: #8f6fd1;
+  --color-type-audiobook: var(--color-accent-green);
+  --color-type-game: #c9773f;
+
+  --color-status-planToWatch: var(--color-ink-40);
+  --color-status-watching: var(--color-accent-blue);
+  --color-status-completed: var(--color-accent-green);
+  --color-status-onHold: var(--color-gold);
+  --color-status-dropped: var(--color-accent);
+
   color-scheme: dark;
 }
 
 :root[data-theme='light'] {
   --color-ink: #faf6ec;
-  --color-ink-10: #ffffff;
+  --color-ink-10: #fbf9f9;
   --color-ink-15: #e2d6b8;
   --color-ink-20: #d6c7a0;
   --color-ink-40: #8c7f68;
@@ -97,6 +115,69 @@
 
   color-scheme: light;
 }
+
+/* Temi colore — 11 varianti (di cui "crimson" è quella di default, già sopra) ×
+   chiaro/scuro = 22 combinazioni. Ogni tema ridefinisce sia i colori di marchio
+   (principale, dorato, verde e blu semantici) sia gli sfondi/testo neutri (ink e
+   parchment, con una leggera tinta sulla stessa tonalità) — così il cambio si vede
+   davvero su tutta l'app: sfondi, card, testo, badge, grafici, ranghi — non solo
+   sui pulsanti. */
+:root[data-palette='vermilion'] { --color-ink: #14110f; --color-ink-10: #1d1816; --color-ink-15: #28201d; --color-ink-20: #3b2f2b; --color-ink-40: #5c4d47; --color-parchment: #f2e0d9; --color-parchment-muted: #b89d94; --color-accent: #af4f2c; --color-gold: #cbb24d; --color-accent-green: #3c9f68; --color-accent-blue: #3782be; }
+:root[data-theme='light'][data-palette='vermilion'] { --color-ink: #faefeb; --color-ink-10: #fbfaf9; --color-ink-15: #e1c2b7; --color-ink-20: #d6ad9f; --color-ink-40: #8d7268; --color-parchment: #221916; --color-parchment-muted: #5c4d47; --color-accent: #974020; --color-gold: #87711d; --color-accent-green: #26824f; --color-accent-blue: #256293; }
+
+:root[data-palette='ember'] { --color-ink: #14120f; --color-ink-10: #1d1916; --color-ink-15: #28221d; --color-ink-20: #3b322b; --color-ink-40: #5c5147; --color-parchment: #f2e5d9; --color-parchment-muted: #b8a594; --color-accent: #af692c; --color-gold: #cbcb4d; --color-accent-green: #3c9f6a; --color-accent-blue: #377fbe; }
+:root[data-theme='light'][data-palette='ember'] { --color-ink: #faf2eb; --color-ink-10: #fbfaf9; --color-ink-15: #e1cbb7; --color-ink-20: #d6b89f; --color-ink-40: #8d7968; --color-parchment: #221c16; --color-parchment-muted: #5c5147; --color-accent: #975820; --color-gold: #87871d; --color-accent-green: #268251; --color-accent-blue: #256093; }
+
+:root[data-palette='amber'] { --color-ink: #14130f; --color-ink-10: #1d1b16; --color-ink-15: #28241d; --color-ink-20: #3b352b; --color-ink-40: #5c5547; --color-parchment: #f2e9d9; --color-parchment-muted: #b8ab94; --color-accent: #af812c; --color-gold: #b4cb4d; --color-accent-green: #3c9f6c; --color-accent-blue: #377cbe; }
+:root[data-theme='light'][data-palette='amber'] { --color-ink: #faf4eb; --color-ink-10: #fbfaf9; --color-ink-15: #e1d2b7; --color-ink-20: #d6c29f; --color-ink-40: #8d8068; --color-parchment: #221e16; --color-parchment-muted: #5c5547; --color-accent: #976e20; --color-gold: #73871d; --color-accent-green: #268253; --color-accent-blue: #255d93; }
+
+:root[data-palette='jade'] { --color-ink: #0f1412; --color-ink-10: #161d1a; --color-ink-15: #1d2823; --color-ink-20: #2b3b34; --color-ink-40: #475c52; --color-parchment: #d9f2e6; --color-parchment-muted: #94b8a7; --color-accent: #2caf72; --color-gold: #4dc3cb; --color-accent-green: #3c9f83; --color-accent-blue: #375ebe; }
+:root[data-theme='light'][data-palette='jade'] { --color-ink: #ebfaf3; --color-ink-10: #f9fbfa; --color-ink-15: #b7e1cd; --color-ink-20: #9fd6bc; --color-ink-40: #688d7c; --color-parchment: #16221c; --color-parchment-muted: #475c52; --color-accent: #209760; --color-gold: #1d8087; --color-accent-green: #268268; --color-accent-blue: #254493; }
+
+:root[data-palette='teal'] { --color-ink: #0f1414; --color-ink-10: #161d1c; --color-ink-15: #1d2827; --color-ink-20: #2b3b3a; --color-ink-40: #475c5a; --color-parchment: #d9f2f0; --color-parchment-muted: #94b8b5; --color-accent: #2cafa4; --color-gold: #4d93cb; --color-accent-green: #3c9f87; --color-accent-blue: #3758be; }
+:root[data-theme='light'][data-palette='teal'] { --color-ink: #ebfaf8; --color-ink-10: #f9fbfa; --color-ink-15: #b7e1de; --color-ink-20: #9fd6d1; --color-ink-40: #688d8a; --color-parchment: #162221; --color-parchment-muted: #475c5a; --color-accent: #20978e; --color-gold: #1d5787; --color-accent-green: #26826c; --color-accent-blue: #253f93; }
+
+:root[data-palette='sapphire'] { --color-ink: #0f1214; --color-ink-10: #161a1d; --color-ink-15: #1d2328; --color-ink-20: #2b343b; --color-ink-40: #47525c; --color-parchment: #d9e6f2; --color-parchment-muted: #94a7b8; --color-accent: #2c72af; --color-gold: #4d4dcb; --color-accent-green: #3c9f8e; --color-accent-blue: #374fbe; }
+:root[data-theme='light'][data-palette='sapphire'] { --color-ink: #ebf3fa; --color-ink-10: #f9fafb; --color-ink-15: #b7cde1; --color-ink-20: #9fbcd6; --color-ink-40: #687c8d; --color-parchment: #161c22; --color-parchment-muted: #47525c; --color-accent: #206097; --color-gold: #1d1d87; --color-accent-green: #268272; --color-accent-blue: #253893; }
+
+:root[data-palette='indigo'] { --color-ink: #0f1014; --color-ink-10: #16171d; --color-ink-15: #1d1e28; --color-ink-20: #2b2c3b; --color-ink-40: #47495c; --color-parchment: #d9dbf2; --color-parchment-muted: #9497b8; --color-accent: #2c37af; --color-gold: #864dcb; --color-accent-green: #3c9f93; --color-accent-blue: #3747be; }
+:root[data-theme='light'][data-palette='indigo'] { --color-ink: #ebecfa; --color-ink-10: #f9f9fb; --color-ink-15: #b7bae1; --color-ink-20: #9fa3d6; --color-ink-40: #686b8d; --color-parchment: #161722; --color-parchment-muted: #47495c; --color-accent: #202a97; --color-gold: #4c1d87; --color-accent-green: #268277; --color-accent-blue: #253293; }
+
+:root[data-palette='amethyst'] { --color-ink: #110f14; --color-ink-10: #19161d; --color-ink-15: #221d28; --color-ink-20: #322b3b; --color-ink-40: #50475c; --color-parchment: #e3d9f2; --color-parchment-muted: #a394b8; --color-accent: #632caf; --color-gold: #c54dcb; --color-accent-green: #3c9f99; --color-accent-blue: #373fbe; }
+:root[data-theme='light'][data-palette='amethyst'] { --color-ink: #f1ebfa; --color-ink-10: #faf9fb; --color-ink-15: #c8b7e1; --color-ink-20: #b69fd6; --color-ink-40: #77688d; --color-parchment: #1b1622; --color-parchment-muted: #50475c; --color-accent: #522097; --color-gold: #811d87; --color-accent-green: #26827d; --color-accent-blue: #252b93; }
+
+:root[data-palette='sakura'] { --color-ink: #140f11; --color-ink-10: #1d1618; --color-ink-15: #281d21; --color-ink-20: #3b2b30; --color-ink-40: #5c474e; --color-parchment: #f2d9e1; --color-parchment-muted: #b894a0; --color-accent: #af2c58; --color-gold: #cb664d; --color-accent-green: #3c969f; --color-accent-blue: #4337be; }
+:root[data-theme='light'][data-palette='sakura'] { --color-ink: #faebf0; --color-ink-10: #fbf9fa; --color-ink-15: #e1b7c5; --color-ink-20: #d69fb1; --color-ink-40: #8d6874; --color-parchment: #22161a; --color-parchment-muted: #5c474e; --color-accent: #972048; --color-gold: #87321d; --color-accent-green: #267a82; --color-accent-blue: #2e2593; }
+
+:root[data-palette='ash'] { --color-ink: #131211; --color-ink-10: #1b1a18; --color-ink-15: #242321; --color-ink-20: #363430; --color-ink-40: #55534e; --color-parchment: #e8e6e3; --color-parchment-muted: #aba7a0; --color-accent: #817765; --color-gold: #a19b91; --color-accent-green: #677e71; --color-accent-blue: #6e7c87; }
+:root[data-theme='light'][data-palette='ash'] { --color-ink: #f4f3f1; --color-ink-10: #fafafa; --color-ink-15: #d0cdc8; --color-ink-20: #c0bcb5; --color-ink-40: #817c74; --color-parchment: #1e1d1a; --color-parchment-muted: #55534e; --color-accent: #5e5545; --color-gold: #544f45; --color-accent-green: #43564b; --color-accent-blue: #48535b; }
+
+:root[data-palette='citrine'] { --color-ink: #14140f; --color-ink-10: #1d1d16; --color-ink-15: #28281d; --color-ink-20: #3b3b2b; --color-ink-40: #5c5c47; --color-parchment: #f2f2d9; --color-parchment-muted: #b8b894; --color-accent: #afaf2c; --color-gold: #88cb4d; --color-accent-green: #3c9f70; --color-accent-blue: #3777be; }
+:root[data-theme='light'][data-palette='citrine'] { --color-ink: #fafaeb; --color-ink-10: #fbfbf9; --color-ink-15: #e1e1b7; --color-ink-20: #d6d69f; --color-ink-40: #8d8d68; --color-parchment: #222216; --color-parchment-muted: #5c5c47; --color-accent: #979720; --color-gold: #4e871d; --color-accent-green: #268257; --color-accent-blue: #255993; }
+
+:root[data-palette='moss'] { --color-ink: #11140f; --color-ink-10: #181d16; --color-ink-15: #21281d; --color-ink-20: #303b2b; --color-ink-40: #4e5c47; --color-parchment: #e1f2d9; --color-parchment-muted: #a0b894; --color-accent: #58af2c; --color-gold: #4dcb66; --color-accent-green: #3c9f78; --color-accent-blue: #376cbe; }
+:root[data-theme='light'][data-palette='moss'] { --color-ink: #f0faeb; --color-ink-10: #fafbf9; --color-ink-15: #c5e1b7; --color-ink-20: #b1d69f; --color-ink-40: #748d68; --color-parchment: #1a2216; --color-parchment-muted: #4e5c47; --color-accent: #489720; --color-gold: #1d8732; --color-accent-green: #26825e; --color-accent-blue: #255093; }
+
+:root[data-palette='azure'] { --color-ink: #0f1314; --color-ink-10: #161c1d; --color-ink-15: #1d2628; --color-ink-20: #2b383b; --color-ink-40: #47585c; --color-parchment: #d9edf2; --color-parchment-muted: #94b0b8; --color-accent: #2c95af; --color-gold: #4d6fcb; --color-accent-green: #3c9f8b; --color-accent-blue: #3753be; }
+:root[data-theme='light'][data-palette='azure'] { --color-ink: #ebf7fa; --color-ink-10: #f9fafb; --color-ink-15: #b7d9e1; --color-ink-20: #9fcbd6; --color-ink-40: #68858d; --color-parchment: #161f22; --color-parchment-muted: #47585c; --color-accent: #208097; --color-gold: #1d3987; --color-accent-green: #26826f; --color-accent-blue: #253c93; }
+
+:root[data-palette='violet'] { --color-ink: #100f14; --color-ink-10: #17161d; --color-ink-15: #1f1d28; --color-ink-20: #2e2b3b; --color-ink-40: #4b475c; --color-parchment: #ddd9f2; --color-parchment-muted: #9a94b8; --color-accent: #422caf; --color-gold: #a54dcb; --color-accent-green: #3c9f96; --color-accent-blue: #3743be; }
+:root[data-theme='light'][data-palette='violet'] { --color-ink: #edebfa; --color-ink-10: #f9f9fb; --color-ink-15: #beb7e1; --color-ink-20: #a89fd6; --color-ink-40: #6e688d; --color-parchment: #181622; --color-parchment-muted: #4b475c; --color-accent: #342097; --color-gold: #671d87; --color-accent-green: #26827a; --color-accent-blue: #252f93; }
+
+:root[data-palette='magenta'] { --color-ink: #140f14; --color-ink-10: #1d161d; --color-ink-15: #281d28; --color-ink-20: #3b2b3b; --color-ink-40: #5c475c; --color-parchment: #f2d9f2; --color-parchment-muted: #b894b8; --color-accent: #af2caf; --color-gold: #cb4d88; --color-accent-green: #3c9e9f; --color-accent-blue: #3837be; }
+:root[data-theme='light'][data-palette='magenta'] { --color-ink: #faebfa; --color-ink-10: #fbf9fb; --color-ink-15: #e1b7e1; --color-ink-20: #d69fd6; --color-ink-40: #8d688d; --color-parchment: #221622; --color-parchment-muted: #5c475c; --color-accent: #972097; --color-gold: #871d4e; --color-accent-green: #268282; --color-accent-blue: #262593; }
+
+:root[data-palette='fuchsia'] { --color-ink: #140f13; --color-ink-10: #1d161b; --color-ink-15: #281d24; --color-ink-20: #3b2b36; --color-ink-40: #5c4755; --color-parchment: #f2d9ea; --color-parchment-muted: #b894ac; --color-accent: #af2c84; --color-gold: #cb4d5e; --color-accent-green: #3c9a9f; --color-accent-blue: #3e37be; }
+:root[data-theme='light'][data-palette='fuchsia'] { --color-ink: #faebf5; --color-ink-10: #fbf9fa; --color-ink-15: #e1b7d3; --color-ink-20: #d69fc3; --color-ink-40: #8d6881; --color-parchment: #22161e; --color-parchment-muted: #5c4755; --color-accent: #972070; --color-gold: #871d2b; --color-accent-green: #267e82; --color-accent-blue: #2a2593; }
+
+:root[data-palette='onyx'] { --color-ink: #101213; --color-ink-10: #171a1c; --color-ink-15: #1f2226; --color-ink-20: #2e3338; --color-ink-40: #4c5257; --color-parchment: #e2e6e9; --color-parchment-muted: #9da6af; --color-accent: #67737e; --color-gold: #93999f; --color-accent-green: #677e73; --color-accent-blue: #6e7a87; }
+:root[data-theme='light'][data-palette='onyx'] { --color-ink: #f0f2f4; --color-ink-10: #f9fafa; --color-ink-15: #c4ccd4; --color-ink-20: #b0bac4; --color-ink-40: #717a84; --color-parchment: #191c1f; --color-parchment-muted: #4b5258; --color-accent: #46525d; --color-gold: #464c53; --color-accent-green: #43564c; --color-accent-blue: #48525b; }
+
+/* Night Tokyo — rosa/magenta neon + ciano neon su un blu-viola notturno molto scuro,
+   saturazione più alta delle altre per l'effetto "insegne al neon". */
+:root[data-palette='night-tokyo'] { --color-ink: #0d0b14; --color-ink-10: #14111d; --color-ink-15: #1d192a; --color-ink-20: #2b253c; --color-ink-40: #4a4360; --color-parchment: #e1e6f4; --color-parchment-muted: #9da0be; --color-accent: #ef399a; --color-gold: #30d3e8; --color-accent-green: #37be7a; --color-accent-blue: #3c9add; }
+:root[data-theme='light'][data-palette='night-tokyo'] { --color-ink: #ededf8; --color-ink-10: #f6f6f9; --color-ink-15: #c6c1e1; --color-ink-20: #b1aad4; --color-ink-40: #6c6388; --color-parchment: #1a1528; --color-parchment-muted: #4b455f; --color-accent: #bf1871; --color-gold: #187d8b; --color-accent-green: #257e52; --color-accent-blue: #226ba0; }
+
 
 @theme inline {
   --color-ink: var(--color-ink);
@@ -110,6 +191,11 @@
   --color-gold: var(--color-gold);
   --color-accent-green: var(--color-accent-green);
   --color-accent-blue: var(--color-accent-blue);
+  --color-rank-ronin: var(--color-rank-ronin);
+  --color-rank-ashigaru: var(--color-rank-ashigaru);
+  --color-rank-samurai: var(--color-rank-samurai);
+  --color-rank-daimyo: var(--color-rank-daimyo);
+  --color-rank-shogun: var(--color-rank-shogun);
 }
 
 body {
@@ -121,4 +207,269 @@ body {
 
 h1, h2, h3 {
   font-family: var(--font-accent);
+}
+
+/* Bushido Ranks — cornice avatar */
+.avatar-frame {
+  --rank-color: var(--color-rank-ronin);
+  --frame-size: 132px;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  position: relative;
+  width: var(--frame-size);
+  height: var(--frame-size);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.avatar-frame__core::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 35%), rgba(255, 255, 255, 0.32), transparent 55%);
+  opacity: var(--glare-opacity, 0);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.avatar-frame__particles {
+  position: absolute;
+  inset: -14px;
+  width: calc(100% + 28px);
+  height: calc(100% + 28px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-frame {
+    transition: none;
+  }
+}
+
+.avatar-frame__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.avatar-frame__core {
+  position: relative;
+  width: calc(100% - 22px);
+  height: calc(100% - 22px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 32% 26%,
+    color-mix(in srgb, var(--rank-color) 32%, var(--color-ink-20)),
+    var(--color-ink-15) 72%
+  );
+  font-family: var(--font-accent);
+  font-weight: 600;
+  font-size: calc(var(--frame-size) * 0.24);
+  color: var(--color-parchment);
+  overflow: hidden;
+}
+
+/* Aura sfocata dietro l'intera cornice, sempre più marcata salendo di grado — stesso
+   principio delle particelle (RANK_TIER in AvatarFrame.tsx), ma percepibile anche a
+   schermate ferme, non solo nell'animazione delle braci. */
+.avatar-frame::before {
+  content: '';
+  position: absolute;
+  inset: -16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rank-color) 55%, transparent), transparent 68%);
+  filter: blur(7px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.avatar-frame[data-rank='samurai']::before {
+  opacity: 0.35;
+  animation: bushido-aura-pulse 3.6s ease-in-out infinite;
+}
+.avatar-frame[data-rank='daimyo']::before {
+  opacity: 0.45;
+  animation: bushido-aura-pulse 3.2s ease-in-out infinite;
+}
+.avatar-frame[data-rank='shogun']::before {
+  opacity: 0.6;
+  animation: bushido-aura-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes bushido-aura-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-frame::before {
+    animation: none !important;
+  }
+}
+
+.avatar-frame__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--rank-color);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.avatar-frame__seal {
+  position: absolute;
+  bottom: -4%;
+  right: -2%;
+  width: 26%;
+  height: 26%;
+  min-width: 18px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink);
+  border: 2px solid var(--rank-color);
+  border-radius: 50%;
+  color: var(--rank-color);
+}
+
+.avatar-frame__seal svg {
+  width: 55%;
+  height: 55%;
+}
+
+.avatar-frame__crown {
+  position: absolute;
+  top: -14%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24%;
+  color: var(--color-gold);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  animation: bushido-crown-bob 2.4s ease-in-out infinite;
+}
+
+.avatar-frame[data-rank='ronin'] {
+  --rank-color: var(--color-rank-ronin);
+}
+.avatar-frame[data-rank='ashigaru'] {
+  --rank-color: var(--color-rank-ashigaru);
+}
+.avatar-frame[data-rank='samurai'] {
+  --rank-color: var(--color-rank-samurai);
+}
+.avatar-frame[data-rank='daimyo'] {
+  --rank-color: var(--color-rank-daimyo);
+}
+.avatar-frame[data-rank='shogun'] {
+  --rank-color: var(--color-rank-shogun);
+}
+
+.avatar-frame[data-rank='ronin'] .avatar-frame__ring {
+  animation: bushido-breathe-ring 4.6s ease-in-out infinite;
+}
+
+.avatar-frame[data-rank='ashigaru'] .avatar-frame__ring {
+  border-width: 4px;
+  animation: bushido-breathe-ring-glow 3.1s ease-in-out infinite;
+}
+
+.avatar-frame[data-rank='samurai'] .avatar-frame__ring {
+  border-width: 4px;
+  animation: bushido-pulse-glow 2.6s ease-in-out infinite;
+}
+
+.avatar-frame[data-rank='daimyo'] .avatar-frame__ring {
+  border-width: 3px;
+  box-shadow: 0 0 0 3px var(--color-ink), 0 0 0 4px var(--color-gold);
+}
+
+.avatar-frame[data-rank='shogun'] .avatar-frame__ring {
+  border: none;
+  background: conic-gradient(from 0deg, var(--color-gold), #fff3cf, var(--color-gold), var(--color-ink-20), var(--color-gold));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  animation: bushido-spin-ring 6s linear infinite;
+}
+
+@keyframes bushido-breathe-ring {
+  0%, 100% { transform: scale(1); opacity: 0.78; }
+  50% { transform: scale(1.045); opacity: 1; }
+}
+
+@keyframes bushido-breathe-ring-glow {
+  0%, 100% { box-shadow: 0 0 10px -4px var(--rank-color); }
+  50% { transform: scale(1.045); box-shadow: 0 0 18px -2px var(--rank-color); }
+}
+
+@keyframes bushido-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rank-color) 50%, transparent); transform: scale(1); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--rank-color) 0%, transparent); transform: scale(1.04); }
+}
+
+@keyframes bushido-spin-ring {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bushido-crown-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+.rank-name-shimmer {
+  background: linear-gradient(100deg, var(--rank-color) 30%, #fff3cf 50%, var(--rank-color) 70%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: bushido-shimmer-sweep 2.8s linear infinite;
+}
+
+@keyframes bushido-shimmer-sweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -20% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-frame__ring,
+  .avatar-frame__crown,
+  .rank-name-shimmer {
+    animation: none !important;
+  }
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-gold);
+  opacity: 0.15;
+  border: 1.5px dashed var(--color-gold);
+  border-radius: 1rem;
+}
+
+.react-grid-item > .react-resizable-handle {
+  width: 26px;
+  height: 26px;
+  opacity: 1;
+  cursor: se-resize;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  right: 5px;
+  bottom: 5px;
+  width: 9px;
+  height: 9px;
+  border-right: 3px solid var(--color-gold);
+  border-bottom: 3px solid var(--color-gold);
+  opacity: 0.9;
 }
