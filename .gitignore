@@ -11,6 +11,19 @@ node_modules
 dist
 dist-ssr
 *.local
+*.bak
+.env
+.env.*.local
+
+# Export PDF della Watchlist scaricati dal browser mentre si testa in locale, se la
+# cartella di download del browser punta qui — non fanno parte del sito.
+/*.pdf
+
+# Configurazione locale di Claude Code (skill installate, lock file) — tooling
+# personale, non fa parte del codice dell'app.
+/.claude
+/.agents
+/skills-lock.json
 
 # Editor directories and files
 .vscode/*
