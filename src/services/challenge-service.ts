@@ -30,16 +30,21 @@ export const getChallengesOnce = async (uid: string): Promise<Challenge[]> => {
   return snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() } as Challenge))
 }
 
-export const createChallenge = (
-  uid: string,
-  { name, startDate, endDate, mode }: { name: string; startDate: string; endDate: string; mode: ChallengeMode },
-) => {
+export interface ChallengeInput {
+  name: string
+  startDate: string
+  endDate: string
+  mode: ChallengeMode
+}
+
+export const createChallenge = (uid: string, { name, startDate, endDate, mode }: ChallengeInput) => {
   return addDoc(challengesRef(uid), {
     name,
     startDate,
     endDate,
     mode,
     completedDates: [],
+    failedDates: [],
     createdAt: serverTimestamp(),
   })
 }
@@ -51,14 +56,17 @@ export const toggleDayManual = (uid: string, challengeId: string, dateKey: strin
   })
 }
 
+export const toggleDayFailed = (uid: string, challengeId: string, dateKey: string, isFailed: boolean) => {
+  const challengeRef = doc(db, 'users', uid, 'challenges', challengeId)
+  return updateDoc(challengeRef, {
+    failedDates: isFailed ? arrayUnion(dateKey) : arrayRemove(dateKey),
+  })
+}
+
 export const deleteChallenge = (uid: string, challengeId: string) => {
   return deleteDoc(doc(db, 'users', uid, 'challenges', challengeId))
 }
 
-export const updateChallenge = (
-  uid: string,
-  challengeId: string,
-  { name, startDate, endDate, mode }: { name: string; startDate: string; endDate: string; mode: ChallengeMode },
-) => {
+export const updateChallenge = (uid: string, challengeId: string, { name, startDate, endDate, mode }: ChallengeInput) => {
   return updateDoc(doc(db, 'users', uid, 'challenges', challengeId), { name, startDate, endDate, mode })
 }
