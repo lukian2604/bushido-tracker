@@ -10,12 +10,13 @@ interface AreaChartProps {
   range: ChartRange
   onRangeChange: (range: ChartRange) => void
   color?: string
+  height?: number
 }
 
 const WIDTH = 600
 const HEIGHT = 180
 
-export const AreaChart = ({ data, range, onRangeChange, color = 'var(--color-accent-blue)' }: AreaChartProps) => {
+export const AreaChart = ({ data, range, onRangeChange, color = 'var(--color-accent-blue)', height = HEIGHT }: AreaChartProps) => {
   const max = Math.max(100, ...data.map((point) => point.value))
   const points = data.map((point, index) => {
     const x = data.length > 1 ? (index / (data.length - 1)) * WIDTH : WIDTH
@@ -46,13 +47,14 @@ export const AreaChart = ({ data, range, onRangeChange, color = 'var(--color-acc
           </button>
         ))}
       </div>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" className="h-45 w-full">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.35} />
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
+        <line x1={0} y1={HEIGHT - 1} x2={WIDTH} y2={HEIGHT - 1} stroke="var(--color-ink-20)" strokeWidth={1} />
         {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} />}
         {linePath && <path d={linePath} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />}
       </svg>

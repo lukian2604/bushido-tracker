@@ -7,13 +7,21 @@ interface DonutSlice {
 const RADIUS = 36
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
-export const DonutChart = ({ slices, centerValue, centerLabel }: { slices: DonutSlice[]; centerValue: string; centerLabel: string }) => {
+interface DonutChartProps {
+  slices: DonutSlice[]
+  centerValue: string
+  centerLabel: string
+  showLegend?: boolean
+  size?: number
+}
+
+export const DonutChart = ({ slices, centerValue, centerLabel, showLegend = true, size = 128 }: DonutChartProps) => {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
   let offsetSoFar = 0
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 90 90" className="size-32">
+      <svg viewBox="0 0 90 90" style={{ width: size, height: size }}>
         <circle cx="45" cy="45" r={RADIUS} fill="none" stroke="var(--color-ink-15)" strokeWidth={10} />
         {total > 0 && slices.map((slice) => {
           const fraction = slice.value / total
@@ -43,17 +51,19 @@ export const DonutChart = ({ slices, centerValue, centerLabel }: { slices: Donut
           {centerLabel}
         </text>
       </svg>
-      <div className="mt-4 flex w-full flex-col gap-2">
-        {slices.map((slice) => (
-          <div key={slice.label} className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-(--color-parchment-muted)">
-              <span className="size-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
-              {slice.label}
-            </span>
-            <span className="text-(--color-ink-40)">{total > 0 ? Math.round((slice.value / total) * 100) : 0}%</span>
-          </div>
-        ))}
-      </div>
+      {showLegend && (
+        <div className="mt-4 flex w-full flex-col gap-2">
+          {slices.map((slice) => (
+            <div key={slice.label} className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-(--color-parchment-muted)">
+                <span className="size-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
+                {slice.label}
+              </span>
+              <span className="text-(--color-ink-40)">{total > 0 ? Math.round((slice.value / total) * 100) : 0}%</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
