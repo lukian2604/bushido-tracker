@@ -2,60 +2,217 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Funzioni helper di validazione
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(uid) {
       return isAuthenticated() && request.auth.uid == uid;
     }
-    
+
     function isValidString(val, maxLen) {
       return val is string && val.size() > 0 && val.size() <= maxLen;
     }
 
+    // Prende la mappa dati + il nome del campo (non il valore) perché accedere a una
+    // chiave assente con la sintassi a punto (es. request.resource.data.username)
+    // genera un errore di valutazione delle regole, non null — succede su qualunque
+    // scrittura/merge che ometta del tutto un campo opzionale invece di impostarlo a
+    // null (es. il primo setDoc di un nuovo utente, che non include ancora photoURL/
+    // username). Il controllo 'key in data' va quindi fatto PRIMA di leggere il valore.
+    function isOptionalString(data, key, maxLen) {
+      return !(key in data) || data[key] == null || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isOptionalList(data, key, maxLen) {
+      return !(key in data) || data[key] == null || (data[key] is list && data[key].size() <= maxLen);
+    }
+
+    function pairIdFor(a, b) {
+      return a < b ? a + '_' + b : b + '_' + a;
+    }
+
+    function isFriendOf(otherUid) {
+      return exists(/databases/$(database)/documents/friendships/$(pairIdFor(request.auth.uid, otherUid)))
+        && get(/databases/$(database)/documents/friendships/$(pairIdFor(request.auth.uid, otherUid))).data.status == 'accepted';
+    }
+
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
-      allow create, update: if isOwner(uid) 
+      allow create, update: if isOwner(uid)
         && isValidString(request.resource.data.displayName, 50)
-        && request.resource.data.email is string;
+        && request.resource.data.email is string
+        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && isOptionalString(request.resource.data, 'country', 2)
+        && isOptionalString(request.resource.data, 'username', 20)
+        && isOptionalList(request.resource.data, 'dashboardConfig', 20)
+        && isOptionalList(request.resource.data, 'dashboardLayout', 20);
 
       // 1. Challenges
       match /challenges/{challengeId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
           && isValidString(request.resource.data.name, 100)
-          && request.resource.data.mode in ['manual', 'auto'];
+          && request.resource.data.mode in ['manual', 'auto']
+          && request.resource.data.startDate is string
+          && request.resource.data.endDate is string
+          && request.resource.data.completedDates is list
+          && (!('failedDates' in request.resource.data) || request.resource.data.failedDates is list);
       }
 
       // 2. Habit Grid Habits
       match /habitGridHabits/{habitId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && isValidString(request.resource.data.name, 100);
+          && isValidString(request.resource.data.name, 100)
+          && isOptionalString(request.resource.data, 'color', 7);
       }
 
-      // 3. Habit Grid Months (YYYY-MM)
+      // 3. Habit Grid Months (YYYY-MM, mappa dinamica giorno -> abitudine -> bool)
       match /habitGridMonths/{yearMonth} {
-        allow read, write: if isOwner(uid);
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.days is map;
       }
 
       // 4. Watchlist Categories
       match /watchlistCategories/{categoryId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && isValidString(request.resource.data.name, 50);
+          && isValidString(request.resource.data.name, 50)
+          && request.resource.data.mediaType in ['video', 'book', 'manga', 'audiobook', 'game']
+          && isOptionalString(request.resource.data, 'emoji', 8);
 
         // 5. Watchlist Items
         match /items/{itemId} {
           allow read, delete: if isOwner(uid);
           allow create, update: if isOwner(uid)
             && isValidString(request.resource.data.title, 150)
+            && isOptionalString(request.resource.data, 'year', 10)
+            && isOptionalString(request.resource.data, 'studio', 100)
+            && isOptionalString(request.resource.data, 'author', 100)
+            && isOptionalString(request.resource.data, 'coverUrl', 500)
             && request.resource.data.status in ['planToWatch', 'watching', 'completed', 'onHold', 'dropped'];
         }
       }
+    }
+
+    // 6. Nomi utente — collezione top-level per unicità + ricerca "per prefisso"
+    //    sull'id del documento (Fase 5, Amici). Un solo username per uid alla volta:
+    //    il client cancella il vecchio doc e ne crea uno nuovo con un writeBatch atomico.
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      // getAfter() legge lo stato di users/{uid} a fine batch (non prima, come get()):
+      // sia claimUsername che ensureUserDocument scrivono users/{uid}.username == username
+      // nello stesso writeBatch di questa create, quindi il confronto qui sotto lascia
+      // passare il flusso legittimo ma blocca la creazione "isolata" di username multipli
+      // che non aggiornano il proprio profilo con quello stesso valore.
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid'])
+        && username.size() >= 3 && username.size() <= 20
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == username;
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+
+    // 7. Profili pubblici — sottoinsieme curato e non sensibile di users/{uid}
+    //    (niente email), leggibile da chiunque sia loggato per la ricerca amici
+    //    e la vista del profilo pubblico di un amico.
+    match /publicProfiles/{uid} {
+      allow read: if isAuthenticated();
+
+      // NOTA: currentStreak resta in parte auto-dichiarato dal client (nessuna fonte
+      // di verità server-side: viene ricalcolato solo lato client da habitGridMonths,
+      // mai persistito altrove come valore "ufficiale"). Alla create (primo
+      // salvataggio, nessun valore precedente con cui confrontare) accettiamo il
+      // valore dichiarato; dall'update in poi un aumento reale dello streak può
+      // avvenire al massimo di 1 al giorno, quindi blocchiamo salti più rapidi di
+      // quello rispetto all'ultimo salvataggio legittimo (con un giorno di margine
+      // per evitare falsi positivi). Chiusura solo parziale: una Cloud Function che
+      // ricalcoli davvero lo streak sarebbe l'unica soluzione completa.
+      // ATTENZIONE: non verificato con l'emulatore Firestore — testare prima del
+      // deploy in produzione, questa regola non è coperta da `npm test`/`tsc`.
+      allow create: if isOwner(uid)
+        && isValidString(request.resource.data.displayName, 50)
+        && isOptionalString(request.resource.data, 'username', 20)
+        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && request.resource.data.currentStreak is int
+        && request.resource.data.currentStreak >= 0
+        && request.resource.data.currentStreak < 100000;
+
+      allow update: if isOwner(uid)
+        && isValidString(request.resource.data.displayName, 50)
+        && isOptionalString(request.resource.data, 'username', 20)
+        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && request.resource.data.currentStreak is int
+        && request.resource.data.currentStreak >= 0
+        && request.resource.data.currentStreak < 100000
+        && (
+          request.resource.data.currentStreak <= resource.data.currentStreak + 1
+          || (resource.data.updatedAt != null
+              && request.time >= resource.data.updatedAt
+                  + duration.value(request.resource.data.currentStreak - resource.data.currentStreak - 1, 'd'))
+        );
+
+      allow delete: if isOwner(uid);
+    }
+
+    // 8. Amicizie — un solo documento per coppia di utenti (id = uidMinore_uidMaggiore),
+    //    così l'accettazione non richiede mai una scrittura nella sottoalberatura
+    //    dell'altro utente (niente scritture "a specchio" da convalidare).
+    match /friendships/{pairId} {
+      allow read: if isAuthenticated()
+        && (request.auth.uid == resource.data.uidA || request.auth.uid == resource.data.uidB);
+      allow create: if isAuthenticated()
+        && request.resource.data.requesterUid == request.auth.uid
+        && (request.auth.uid == request.resource.data.uidA || request.auth.uid == request.resource.data.uidB)
+        && request.resource.data.uidA < request.resource.data.uidB
+        && request.resource.data.status == 'pending'
+        && pairId == request.resource.data.uidA + '_' + request.resource.data.uidB;
+      allow update: if isAuthenticated()
+        && (request.auth.uid == resource.data.uidA || request.auth.uid == resource.data.uidB)
+        && request.auth.uid != resource.data.requesterUid
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.uidA == resource.data.uidA
+        && request.resource.data.uidB == resource.data.uidB
+        && request.resource.data.requesterUid == resource.data.requesterUid;
+      allow delete: if isAuthenticated()
+        && (request.auth.uid == resource.data.uidA || request.auth.uid == resource.data.uidB);
+    }
+
+    // 9. Feed attività — eventi generici (mai nomi di abitudini/sfide/elementi Watchlist),
+    //    visibili al proprietario e ai suoi amici accettati. Sola creazione dal client,
+    //    nessuna modifica/cancellazione (registro di eventi in append-only).
+    match /activityEvents/{eventId} {
+      allow read: if isAuthenticated()
+        && (request.auth.uid == resource.data.uid || isFriendOf(resource.data.uid));
+      // NOTA: rankId/streak restano in parte auto-dichiarati dal client — non esiste
+      // in Firestore una fonte di verità server-side per lo streak reale (calcolato
+      // solo lato client da habitGridMonths, mai persistito altrove come valore
+      // "ufficiale"). Una chiusura completa richiederebbe una Cloud Function che
+      // ricalcoli lo streak; qui ci limitiamo a: (a) un tetto superiore ragionevole
+      // e (b) coerenza interna rankId<->streak (soglie da src/lib/ranks.ts) quando
+      // l'evento include entrambi i campi nello stesso documento.
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.type in ['rankUp', 'streakMilestone', 'watchlistCompleted']
+        && request.resource.data.keys().hasOnly(['uid', 'type', 'rankId', 'streak', 'createdAt'])
+        && (!('rankId' in request.resource.data) || request.resource.data.rankId in ['ronin', 'ashigaru', 'samurai', 'daimyo', 'shogun'])
+        && (!('streak' in request.resource.data) || (request.resource.data.streak is int && request.resource.data.streak > 0 && request.resource.data.streak < 100000))
+        && (!('rankId' in request.resource.data) || !('streak' in request.resource.data) ||
+            (request.resource.data.rankId == 'ronin' && request.resource.data.streak <= 6) ||
+            (request.resource.data.rankId == 'ashigaru' && request.resource.data.streak >= 7 && request.resource.data.streak <= 29) ||
+            (request.resource.data.rankId == 'samurai' && request.resource.data.streak >= 30 && request.resource.data.streak <= 89) ||
+            (request.resource.data.rankId == 'daimyo' && request.resource.data.streak >= 90 && request.resource.data.streak <= 179) ||
+            (request.resource.data.rankId == 'shogun' && request.resource.data.streak >= 180));
+    }
+
+    // Tutto il resto negato di default (difesa in profondità, oltre al deny implicito di Firestore)
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

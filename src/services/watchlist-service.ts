@@ -9,9 +9,11 @@ import {
   query,
   orderBy,
   getDocs,
+  writeBatch,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { db, storage } from '@/firebase/config'
 import type { MediaType, WatchlistCategory, WatchlistCategoryWithProgress, WatchlistItem, WatchlistStatus } from '@/lib/types'
 
 const categoriesRef = (uid: string) => collection(db, 'users', uid, 'watchlistCategories')
@@ -37,16 +39,27 @@ export const getAllCategoriesWithProgress = async (uid: string): Promise<Watchli
   }))
 }
 
-export const createCategory = (uid: string, name: string, mediaType: MediaType = 'video') => {
-  return addDoc(categoriesRef(uid), { name, mediaType, createdAt: serverTimestamp() })
+export const createCategory = (uid: string, name: string, mediaType: MediaType = 'video', emoji?: string) => {
+  return addDoc(categoriesRef(uid), { name, mediaType, ...(emoji ? { emoji } : {}), createdAt: serverTimestamp() })
 }
 
-export const deleteCategory = (uid: string, categoryId: string) => {
-  return deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId))
+export const deleteCategory = async (uid: string, categoryId: string) => {
+  const itemsSnapshot = await getDocs(itemsRef(uid, categoryId))
+  const coverUrls = itemsSnapshot.docs
+    .map((docSnapshot) => (docSnapshot.data() as WatchlistItem).coverUrl)
+    .filter((url): url is string => !!url)
+
+  const batch = writeBatch(db)
+  itemsSnapshot.docs.forEach((itemDoc) => batch.delete(itemDoc.ref))
+  batch.delete(doc(db, 'users', uid, 'watchlistCategories', categoryId))
+  await batch.commit()
+
+  await Promise.all(coverUrls.map((url) => deleteObject(ref(storage, url)).catch(() => {})))
 }
 
-export const updateCategory = (uid: string, categoryId: string, data: { name?: string; mediaType?: MediaType }) => {
-  return updateDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId), data)
+export const updateCategory = (uid: string, categoryId: string, data: { name?: string; mediaType?: MediaType; emoji?: string | null }) => {
+  const { emoji, ...rest } = data
+  return updateDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId), { ...rest, emoji: emoji || null })
 }
 
 export const subscribeToItems = (uid: string, categoryId: string, callback: (items: WatchlistItem[]) => void) => {
@@ -63,14 +76,16 @@ export interface WatchlistItemInput {
   studio: string
   author: string
   status: WatchlistStatus
+  coverUrl?: string
 }
 
-export const addItem = (uid: string, categoryId: string, { title, year, studio, author, status }: WatchlistItemInput) => {
+export const addItem = (uid: string, categoryId: string, { title, year, studio, author, status, coverUrl }: WatchlistItemInput) => {
   return addDoc(itemsRef(uid, categoryId), {
     title,
     year,
     studio,
     ...(author ? { author } : {}),
+    ...(coverUrl ? { coverUrl } : {}),
     status,
     watchedAt: null,
     createdAt: serverTimestamp(),
@@ -90,11 +105,19 @@ export const updateWatchedAt = (uid: string, categoryId: string, itemId: string,
   return updateDoc(itemRef, { watchedAt: date ? Timestamp.fromDate(date) : null })
 }
 
-export const updateItem = (uid: string, categoryId: string, itemId: string, { title, year, studio, author, status }: WatchlistItemInput) => {
+export const updateItem = (uid: string, categoryId: string, itemId: string, { title, year, studio, author, status, coverUrl }: WatchlistItemInput) => {
   const itemRef = doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId)
-  return updateDoc(itemRef, { title, year, studio, ...(author ? { author } : {}), status })
+  return updateDoc(itemRef, { title, year, studio, ...(author ? { author } : {}), ...(coverUrl ? { coverUrl } : {}), status })
 }
 
-export const deleteItem = (uid: string, categoryId: string, itemId: string) => {
-  return deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId))
+export const deleteItem = async (uid: string, categoryId: string, itemId: string, coverUrl?: string | null) => {
+  await deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId))
+  if (coverUrl) await deleteObject(ref(storage, coverUrl)).catch(() => {})
+}
+
+export const uploadItemCover = async (uid: string, file: File): Promise<string> => {
+  const fileId = crypto.randomUUID()
+  const coverRef = ref(storage, `users/${uid}/watchlist-covers/${fileId}.jpg`)
+  await uploadBytes(coverRef, file, { contentType: file.type })
+  return getDownloadURL(coverRef)
 }
