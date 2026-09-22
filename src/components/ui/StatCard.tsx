@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react'
+import { ArrowUpIcon, ArrowDownIcon } from '@/components/ui/icons'
+
+type StatTrend = 'good' | 'bad' | 'neutral'
 
 interface StatCardProps {
   icon: ReactNode
@@ -6,13 +9,20 @@ interface StatCardProps {
   label: string
   value: ReactNode
   unit?: string
-  subtext?: ReactNode
-  subtextColor?: string
+  delta?: ReactNode
+  trend?: StatTrend
 }
 
-export const StatCard = ({ icon, iconColor, label, value, unit, subtext, subtextColor }: StatCardProps) => {
+const TREND_COLOR: Record<StatTrend, string> = {
+  good: 'var(--color-accent-green)',
+  bad: 'var(--color-accent)',
+  neutral: 'var(--color-parchment-muted)',
+}
+
+export const StatCard = ({ icon, iconColor, label, value, unit, delta, trend = 'neutral' }: StatCardProps) => {
   return (
-    <div className="rounded-2xl border border-(--color-border) bg-(--color-ink-10) p-5">
+    <div className="relative overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-ink-10) py-4 pl-5.5 pr-5">
+      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: iconColor }} />
       <div className="flex items-center justify-between">
         <span className="text-sm text-(--color-parchment-muted)">{label}</span>
         <span
@@ -26,9 +36,11 @@ export const StatCard = ({ icon, iconColor, label, value, unit, subtext, subtext
         <span className="font-accent text-3xl font-bold text-(--color-parchment)">{value}</span>
         {unit && <span className="text-sm text-(--color-ink-40)">{unit}</span>}
       </div>
-      {subtext && (
-        <p className="mt-1.5 text-xs" style={{ color: subtextColor || 'var(--color-ink-40)' }}>
-          {subtext}
+      {delta && (
+        <p className="mt-1.5 flex items-center gap-1 text-xs" style={{ color: TREND_COLOR[trend] }}>
+          {trend === 'good' && <ArrowUpIcon className="size-2.5" />}
+          {trend === 'bad' && <ArrowDownIcon className="size-2.5" />}
+          {delta}
         </p>
       )}
     </div>
