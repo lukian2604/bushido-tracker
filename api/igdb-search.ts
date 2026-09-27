@@ -55,6 +55,7 @@ interface IgdbGame {
   name?: string
   first_release_date?: number
   cover?: { image_id?: string }
+  involved_companies?: { developer?: boolean; company?: { name?: string } }[]
 }
 
 const escapeApicalypseString = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
@@ -82,7 +83,7 @@ export default async function handler(request: Request): Promise<Response> {
     if (!accessToken) return jsonResponse([])
 
     const body = [
-      'fields name, first_release_date, cover.image_id;',
+      'fields name, first_release_date, cover.image_id, involved_companies.developer, involved_companies.company.name;',
       `search "${escapeApicalypseString(query)}";`,
       'limit 40;',
     ].join('\n')
@@ -102,6 +103,7 @@ export default async function handler(request: Request): Promise<Response> {
     const results = games.map((game) => ({
       title: game.name || '',
       year: game.first_release_date ? String(new Date(game.first_release_date * 1000).getUTCFullYear()) : '',
+      studio: game.involved_companies?.find((entry) => entry.developer)?.company?.name || '',
       coverUrl: game.cover?.image_id ? `${IGDB_IMAGE_BASE}/${game.cover.image_id}.jpg` : undefined,
     }))
 

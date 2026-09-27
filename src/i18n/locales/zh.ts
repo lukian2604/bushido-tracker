@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': '音乐视频',
   'watchlist.removeCover': '移除封面',
+  'watchlist.coverUnavailable': '来源封面无法加载 — 你可以上传自己的封面。',
+  'watchlist.duplicateItem': '「{title}」已经在这个收藏中了。',
 
   'watchlist.addCollectionCard': '新建收藏夹',
   'watchlist.emojiHint': '输入或粘贴任意表情符号——下面的只是快捷选项。',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': '按用户名搜索…',
   'friends.searchNoResults': '未找到该用户名对应的武者。',
   'friends.alreadyFriends': '已经是好友',
+  'friends.viewProfile': '查看资料',
+  'friends.profileRankTitle': '段位',
   'friends.requestPending': '待处理',
   'friends.sendRequestButton': '添加',
   'friends.requestsTitle': '好友请求',

@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'Клип',
   'watchlist.removeCover': 'Убрать обложку',
+  'watchlist.coverUnavailable': 'Обложка недоступна в источнике — можно загрузить свою.',
+  'watchlist.duplicateItem': '«{title}» уже есть в этой коллекции.',
 
   'watchlist.addCollectionCard': 'Новая коллекция',
   'watchlist.emojiHint': 'Введите или вставьте любой эмодзи — те, что ниже, лишь быстрые варианты.',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': 'Поиск по имени пользователя…',
   'friends.searchNoResults': 'Воин с таким именем не найден.',
   'friends.alreadyFriends': 'Уже друзья',
+  'friends.viewProfile': 'Открыть профиль',
+  'friends.profileRankTitle': 'Ранг',
   'friends.requestPending': 'Ожидание',
   'friends.sendRequestButton': 'Добавить',
   'friends.requestsTitle': 'Заявки в друзья',

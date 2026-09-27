@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'ミュージックビデオ',
   'watchlist.removeCover': 'カバーを削除',
+  'watchlist.coverUnavailable': 'ソースのカバー画像を読み込めません — 自分の画像をアップロードできます。',
+  'watchlist.duplicateItem': '「{title}」はすでにこのコレクションにあります。',
 
   'watchlist.addCollectionCard': '新しいコレクション',
   'watchlist.emojiHint': '好きな絵文字を入力・貼り付けできます——下のものはあくまで簡単なショートカットです。',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': 'ユーザー名で検索…',
   'friends.searchNoResults': 'そのユーザー名の武者は見つかりませんでした。',
   'friends.alreadyFriends': 'すでにフレンドです',
+  'friends.viewProfile': 'プロフィールを見る',
+  'friends.profileRankTitle': '段位',
   'friends.requestPending': '保留中',
   'friends.sendRequestButton': '追加',
   'friends.requestsTitle': 'フレンド申請',

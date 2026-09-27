@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'Musikvideo',
   'watchlist.removeCover': 'Cover entfernen',
+  'watchlist.coverUnavailable': 'Cover von der Quelle nicht verfügbar — du kannst ein eigenes hochladen.',
+  'watchlist.duplicateItem': '„{title}“ ist bereits in dieser Sammlung.',
 
   'watchlist.addCollectionCard': 'Neue Sammlung',
   'watchlist.emojiHint': 'Schreibe oder füge ein beliebiges Emoji ein — die unten sind nur schnelle Vorschläge.',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': 'Nach Benutzername suchen…',
   'friends.searchNoResults': 'Kein Krieger mit diesem Benutzernamen gefunden.',
   'friends.alreadyFriends': 'Bereits befreundet',
+  'friends.viewProfile': 'Profil ansehen',
+  'friends.profileRankTitle': 'Rang',
   'friends.requestPending': 'Ausstehend',
   'friends.sendRequestButton': 'Hinzufügen',
   'friends.requestsTitle': 'Freundschaftsanfragen',

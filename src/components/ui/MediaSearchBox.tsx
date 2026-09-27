@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@/hooks/useTranslation'
 import { SearchIcon } from '@/components/ui/icons'
+import { CoverImage } from '@/components/ui/CoverImage'
 import { searchMedia } from '@/services/media-search'
 import type { MediaSearchResult, MediaType } from '@/lib/types'
 
@@ -81,11 +82,7 @@ export const MediaSearchBox = ({ mediaType, onSelect, searchLanguage }: MediaSea
                 }}
                 className="flex items-center gap-3 rounded-lg p-2 text-left hover:bg-(--color-ink)"
               >
-                {result.coverUrl ? (
-                  <img src={result.coverUrl} alt="" className="h-12 w-9 flex-none rounded object-cover" />
-                ) : (
-                  <span className="h-12 w-9 flex-none rounded bg-(--color-ink-20)" />
-                )}
+                <CoverImage src={result.coverUrl} className="h-12 w-9 flex-none rounded object-cover" />
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5">
                     <span className="truncate text-sm font-medium text-(--color-parchment)">{result.title}</span>

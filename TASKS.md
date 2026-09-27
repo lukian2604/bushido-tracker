@@ -6,13 +6,16 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto
 
 ---
 
-## 📍 Stato attuale (aggiornato 2026-09-22)
+## 📍 Stato attuale (aggiornato 2026-09-27)
+
+**Fatto oggi (2026-09-27)**: regole Firestore + Storage **testate con l'emulatore** (19 casi: registrazione, username, profilo pubblico/streak, upload/cancellazione foto). Trovato e corretto un bug in `storage.rules`: la **cancellazione** di foto profilo e copertine era sempre bloccata (il controllo su dimensione/tipo file valeva anche per il delete, dove non c'è nessun file). Aggiunti `firebase.json` e `.firebaserc` (mancavano: senza, `firebase deploy` non funzionava). Il Realtime Database `bushido-tracker-default-rtdb` **non è usato dall'app** — da chiudere con regole `false` dalla console. **`firestore.rules` DEPLOYATE in produzione il 2026-09-27** ✅. `storage.rules` non deployabili: Storage mai attivato sul progetto (richiede piano Blaze) — decisione aperta: attivare Blaze (gratis fino a 5GB in regione USA) oppure togliere upload foto profilo/copertine.
+
 
 **Blocco principale, ancora aperto**: `firestore.rules` **e** `storage.rules` sono scritte correttamente ma **non deployate** su Firebase — serve un tuo `firebase login` interattivo (non posso farlo io). Finché non viene fatto, restano bloccati con "Missing or insufficient permissions": nome utente, ricerca amici, colori/emoji custom, caricamento copertina elementi, caricamento foto profilo. Sono tutte funzioni già costruite e corrette nel codice, non mancanti.
 
 **Altri blocchi noti (esterni, non dipendono dal codice)**:
-- Ricerca videogiochi (RAWG): serve ottenere una chiave API gratuita da rawg.io (il sito era tornato online dopo un'interruzione).
-- Google Books può esaurire la sua quota giornaliera gratuita di tanto in tanto (si resetta da sola) — da oggi, Open Library fa comunque da rete di sicurezza per Libri/Fumetti in quei momenti.
+- Ricerca videogiochi: **catalogo completo senza chiavi** grazie a Wikidata (aggiunto il 27/09: sviluppatore, anno, copertina), più FreeToGame + CheapShark. Facoltativo: chiavi IGDB (app gratuita su dev.twitch.tv, `IGDB_CLIENT_ID`/`IGDB_CLIENT_SECRET` su Vercel) per risultati migliori, e/o chiave RAWG come fonte extra.
+- Google Books senza chiave esaurisce spesso la quota condivisa (429) → libri russi introvabili. Codice pronto per `VITE_GOOGLE_BOOKS_API_KEY` (27/09): **da creare** in Google Cloud (Books API, gratis) e mettere in `.env` + Vercel.
 - `git` non funziona in questa sessione shell (manca l'accettazione della licenza Xcode) — da sistemare con `sudo xcodebuild -license` da terminale prima del prossimo commit/push.
 
 **Fatto di recente (2026-09-22)**: **security audit completa del sito** (avviata il 21/09, interrotta per token esauriti, ripresa e conclusa oggi con verifica indipendente di ogni sospetto). Nessuna falla critica trovata (nessun furto account, nessun accesso ai dati di altri utenti). 3 sospetti di ieri erano falsi allarmi, scartati dopo verifica. **7 problemi reali confermati e corretti in questa sessione** (tutti gravità bassa): upload SVG accettato come immagine, foto profilo mai cancellata da Storage alla cancellazione account, nessun limite di username per utente, username orfani non ripuliti alla cancellazione account, streak/rango degli eventi amici falsificabile via SDK diretto, cancellazione categoria Watchlist che non cancellava davvero elementi/foto, streak auto-dichiarato nel profilo pubblico/classifica amici (quest'ultimo con un limite "+1 al giorno" testato con l'emulatore Firestore). **Trovato e corretto anche un bug preesistente più grave durante i test con l'emulatore**: le regole Firestore per i campi opzionali (`isOptionalString`/`isOptionalList`, 16 punti nel file) si sarebbero rotte alla primissima registrazione di ogni nuovo utente non appena fatto il deploy — corretto. Dettagli completi in `REVIEW_LOG.md`; report tecnico riga-per-riga in `~/security-audit-skill/bushido-tracker/run-1/findings.json`.
@@ -56,7 +59,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto
 ## Fase 3 — Integrazione API esterne (Watchlist)
 - [x] Ricerca anime/manga (AniList) — testata dal vivo durante lo sviluppo, funziona
 - [x] Ricerca libri (Google Books)
-- [x] Ricerca giochi (RAWG.io) — **codice pronto ma non testabile da me**: serve una chiave API gratuita, vedi nota sotto
+- [x] Ricerca giochi — multi-fonte (22/09): IGDB via Edge Function `api/igdb-search.ts` (chiavi Twitch lato server, facoltative), FreeToGame e CheapShark sempre attive senza chiave, RAWG extra se configurata
 - [x] Ricerca audiolibri (riuso Google Books)
 - [x] Supporto multi-lingua nella ricerca (AniList cerca su tutte le lingue del titolo; Google Books usa `langRestrict` sulla lingua dell'interfaccia)
 - [x] Rilevare il paese dell'utente in fase di registrazione (Fase 3b) — usato per ora solo come dato di profilo, la lingua di ricerca di fatto segue la lingua dell'interfaccia già scelta (vedi nota sotto)
@@ -78,6 +81,7 @@ Legenda: `[ ]` da fare · `[~]` in corso · `[x]` fatto
 - [x] Lista amici + profilo pubblico (solo nome/foto/rango/streak via nuova collezione `publicProfiles`, mai dettagli di abitudini/watchlist/sfide)
 - [x] Classifica tra amici — **semplificata**: ordinata per streak attuale, non per check-in della sola settimana corrente (vedi REVIEW_LOG)
 - [x] Feed attività (rank-up, streak, watchlist completati) — implementato, non più rimandato (voce non aggiornata prima)
+- [x] Finestra profilo amico (2026-09-27) — cornice rango + streak, solo dati pubblici, clic su avatar/nome
 - [x] Regole di sicurezza dedicate (`usernames`, `publicProfiles`, `friendships`) — **non ancora testate con emulatore né deployate**, stesso discorso del resto delle regole
 
 ## Fase 7 — Dashboard configurabile

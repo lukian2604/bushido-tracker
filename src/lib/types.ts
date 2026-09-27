@@ -129,6 +129,12 @@ export interface MediaSearchResult {
   // chiave da tradurre con watchlist.searchFormat.<format>, per distinguere risultati che
   // altrimenti sembrerebbero identici (es. un manga da un light novel nella stessa lista).
   format?: string
+  // Altri titoli dello stesso risultato (romaji/inglese/nativo, titolo originale del
+  // film...) — servono solo al controllo doppioni, non vengono salvati.
+  altTitles?: string[]
+  // Riferimento TMDB per chiedere, solo alla scelta del risultato, i titoli del film in
+  // tutte le lingue (vedi fetchAlternativeTitles).
+  tmdbRef?: { type: 'movie' | 'tv'; id: number }
 }
 
 export interface WeeklyActivityDay {

@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'Vidéo Musicale',
   'watchlist.removeCover': 'Retirer la couverture',
+  'watchlist.coverUnavailable': 'Couverture indisponible depuis la source — tu peux importer la tienne.',
+  'watchlist.duplicateItem': '« {title} » est déjà dans cette collection.',
 
   'watchlist.addCollectionCard': 'Nouvelle collection',
   'watchlist.emojiHint': 'Écris ou colle n\'importe quel emoji — ceux ci-dessous ne sont que des raccourcis rapides.',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': "Rechercher par nom d'utilisateur…",
   'friends.searchNoResults': "Aucun guerrier trouvé avec ce nom d'utilisateur.",
   'friends.alreadyFriends': 'Déjà amis',
+  'friends.viewProfile': 'Voir le profil',
+  'friends.profileRankTitle': 'Rang',
   'friends.requestPending': 'En attente',
   'friends.sendRequestButton': 'Ajouter',
   'friends.requestsTitle': "Demandes d'amitié",

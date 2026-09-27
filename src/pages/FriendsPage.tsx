@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/useToast'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { AvatarFrame } from '@/components/ui/AvatarFrame'
+import { FriendProfileModal } from '@/components/ui/FriendProfileModal'
 import { SearchIcon, CheckIcon, XIcon, FireIcon, TrophyIcon, WatchlistIcon } from '@/components/ui/icons'
 import { subscribeToUser } from '@/services/user-service'
 import {
@@ -44,6 +45,7 @@ export const FriendsPage = () => {
   const [friendships, setFriendships] = useState<Friendship[]>([])
   const [profiles, setProfiles] = useState<Record<string, ProfileEntry>>({})
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([])
+  const [viewingProfile, setViewingProfile] = useState<ProfileEntry | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -189,11 +191,13 @@ export const FriendsPage = () => {
                 const isPending = pendingUids.has(result.uid) || friendships.some((f) => otherUidFor(f) === result.uid && f.status === 'pending')
                 return (
                   <div key={result.uid} className="flex items-center gap-3 rounded-lg p-2 hover:bg-(--color-ink)">
-                    <AvatarFrame streak={result.currentStreak} uid={result.uid} displayName={result.displayName} photoUrl={result.photoURL} size={36} showSeal={false} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-(--color-parchment)">{result.displayName}</p>
-                      <p className="truncate text-xs text-(--color-parchment-muted)">@{result.username}</p>
-                    </div>
+                    <button type="button" onClick={() => setViewingProfile(result)} aria-label={t('friends.viewProfile')} className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left">
+                      <AvatarFrame streak={result.currentStreak} uid={result.uid} displayName={result.displayName} photoUrl={result.photoURL} size={36} showSeal={false} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-(--color-parchment)">{result.displayName}</p>
+                        <p className="truncate text-xs text-(--color-parchment-muted)">@{result.username}</p>
+                      </div>
+                    </button>
                     {isFriend ? (
                       <span className="flex-none text-xs text-(--color-ink-40)">{t('friends.alreadyFriends')}</span>
                     ) : isPending ? (
@@ -220,12 +224,14 @@ export const FriendsPage = () => {
               const profile = profiles[otherUid]
               return (
                 <div key={request.id} className="flex items-center gap-3 rounded-lg p-2">
-                  <AvatarFrame streak={profile?.currentStreak || 0} uid={otherUid} displayName={profile?.displayName || '?'} photoUrl={profile?.photoURL} size={36} showSeal={false} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-(--color-parchment)">
-                      <span className="font-semibold">{profile?.displayName || '…'}</span> {t('friends.incomingFrom')}
-                    </p>
-                  </div>
+                  <button type="button" onClick={() => setViewingProfile(profile || null)} aria-label={t('friends.viewProfile')} className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left" disabled={!profile}>
+                    <AvatarFrame streak={profile?.currentStreak || 0} uid={otherUid} displayName={profile?.displayName || '?'} photoUrl={profile?.photoURL} size={36} showSeal={false} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-(--color-parchment)">
+                        <span className="font-semibold">{profile?.displayName || '…'}</span> {t('friends.incomingFrom')}
+                      </p>
+                    </div>
+                  </button>
                   <div className="flex flex-none gap-1.5">
                     <button
                       type="button"
@@ -260,8 +266,10 @@ export const FriendsPage = () => {
               const profile = profiles[otherUid]
               return (
                 <div key={request.id} className="flex items-center gap-3 rounded-lg p-2">
-                  <AvatarFrame streak={profile?.currentStreak || 0} uid={otherUid} displayName={profile?.displayName || '?'} photoUrl={profile?.photoURL} size={36} showSeal={false} />
-                  <p className="min-w-0 flex-1 truncate text-sm text-(--color-parchment)">{profile?.displayName || '…'}</p>
+                  <button type="button" onClick={() => setViewingProfile(profile || null)} aria-label={t('friends.viewProfile')} className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left" disabled={!profile}>
+                    <AvatarFrame streak={profile?.currentStreak || 0} uid={otherUid} displayName={profile?.displayName || '?'} photoUrl={profile?.photoURL} size={36} showSeal={false} />
+                    <p className="min-w-0 flex-1 truncate text-sm text-(--color-parchment)">{profile?.displayName || '…'}</p>
+                  </button>
                   <span className="flex-none text-xs text-(--color-ink-40)">{t('friends.outgoingTo')}</span>
                   <button
                     type="button"
@@ -302,11 +310,13 @@ export const FriendsPage = () => {
                   >
                     {index + 1}
                   </span>
-                  <AvatarFrame streak={friend.currentStreak} uid={friend.uid} displayName={friend.displayName} photoUrl={friend.photoURL} size={40} showSeal={false} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-(--color-parchment)">{friend.displayName}</p>
-                    <p className="text-xs font-semibold" style={{ color: `var(--color-rank-${rank.id})` }}>{rank.name}</p>
-                  </div>
+                  <button type="button" onClick={() => setViewingProfile(friend)} aria-label={t('friends.viewProfile')} className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left">
+                    <AvatarFrame streak={friend.currentStreak} uid={friend.uid} displayName={friend.displayName} photoUrl={friend.photoURL} size={40} showSeal={false} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-(--color-parchment)">{friend.displayName}</p>
+                      <p className="text-xs font-semibold" style={{ color: `var(--color-rank-${rank.id})` }}>{rank.name}</p>
+                    </div>
+                  </button>
                   <span className="flex flex-none items-center gap-1 text-sm font-semibold tabular-nums text-(--color-parchment)">
                     <FireIcon className="size-3.5 text-(--color-gold)" />
                     {friend.currentStreak}
@@ -374,6 +384,7 @@ export const FriendsPage = () => {
           </div>
         </div>
       )}
+      {viewingProfile && <FriendProfileModal profile={viewingProfile} onClose={() => setViewingProfile(null)} />}
     </div>
   )
 }

@@ -339,3 +339,11 @@ export const RankShogunIcon = (props: SVGProps<SVGSVGElement>) => (
     <circle cx="12" cy="9.4" r="1.3" fill="currentColor" />
   </svg>
 )
+
+export const ImageIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <circle cx="9" cy="10" r="1.8" />
+    <path d="m21 16-5-5-9 9" />
+  </svg>
+)
