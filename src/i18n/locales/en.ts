@@ -266,6 +266,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'Music Video',
   'watchlist.removeCover': 'Remove cover',
+  'watchlist.coverUnavailable': 'Cover not available from the source — you can upload your own.',
+  'watchlist.duplicateItem': '“{title}” is already in this collection.',
 
   'watchlist.addCollectionCard': 'New collection',
   'watchlist.emojiHint': 'Type or paste any emoji you like — the ones below are just quick shortcuts.',
@@ -317,6 +319,8 @@ export default {
   'friends.searchPlaceholder': 'Search by username…',
   'friends.searchNoResults': 'No warriors found with that username.',
   'friends.alreadyFriends': 'Already friends',
+  'friends.viewProfile': 'View profile',
+  'friends.profileRankTitle': 'Rank',
   'friends.requestPending': 'Pending',
   'friends.sendRequestButton': 'Add',
   'friends.requestsTitle': 'Friend requests',

@@ -132,8 +132,8 @@ service cloud.firestore {
       // quello rispetto all'ultimo salvataggio legittimo (con un giorno di margine
       // per evitare falsi positivi). Chiusura solo parziale: una Cloud Function che
       // ricalcoli davvero lo streak sarebbe l'unica soluzione completa.
-      // ATTENZIONE: non verificato con l'emulatore Firestore — testare prima del
-      // deploy in produzione, questa regola non è coperta da `npm test`/`tsc`.
+      // Verificata con l'emulatore Firestore il 2026-09-27 (+1, stesso valore, reset
+      // a 0, salto bloccato, recupero dopo giorni offline).
       allow create: if isOwner(uid)
         && isValidString(request.resource.data.displayName, 50)
         && isOptionalString(request.resource.data, 'username', 20)

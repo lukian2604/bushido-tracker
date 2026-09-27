@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { searchMedia } from './media-search'
+import { searchMedia, fetchResultDetails } from './media-search'
+import type { MediaSearchResult } from '@/lib/types'
 
 const jsonResponse = (body: unknown, ok = true) =>
   Promise.resolve({ ok, json: () => Promise.resolve(body) } as Response)
@@ -26,7 +27,7 @@ const googleBooksRoute = (items: Record<string, unknown>[]): FetchRoute => (url)
   url.includes('googleapis.com/books') ? jsonResponse({ items }) : undefined
 
 const shikimoriRoute = (entries: Record<string, unknown>[]): FetchRoute => (url) =>
-  url.includes('shikimori.one') ? jsonResponse(entries) : undefined
+  url.includes('shikimori.io') ? jsonResponse(entries) : undefined
 
 const rawgRoute = (results: Record<string, unknown>[]): FetchRoute => (url) =>
   url.includes('api.rawg.io') ? jsonResponse({ results }) : undefined
@@ -39,6 +40,23 @@ const freeToGameRoute = (games: Record<string, unknown>[]): FetchRoute => (url) 
 
 const cheapSharkRoute = (games: Record<string, unknown>[]): FetchRoute => (url) =>
   url.includes('cheapshark.com') ? jsonResponse(games) : undefined
+
+const wikidataRoute = (
+  search: { id: string }[],
+  entities: Record<string, unknown>,
+  covers: Record<string, string> = {},
+): FetchRoute => (url) => {
+  if (url.includes('wikidata.org') && url.includes('action=wbsearchentities')) return jsonResponse({ search })
+  if (url.includes('wikidata.org') && url.includes('action=wbgetentities')) {
+    const ids = (new URL(url).searchParams.get('ids') || '').split('|')
+    return jsonResponse({ entities: Object.fromEntries(ids.filter((id) => entities[id]).map((id) => [id, entities[id]])) })
+  }
+  if (url.includes('en.wikipedia.org')) {
+    const pages = Object.entries(covers).map(([title, source], index) => [index, { title, thumbnail: { source: `${source}?utm_source=x` } }])
+    return jsonResponse({ query: { pages: Object.fromEntries(pages) } })
+  }
+  return undefined
+}
 
 const openLibraryRoute = (docs: Record<string, unknown>[]): FetchRoute => (url) =>
   url.includes('openlibrary.org/search.json') && !url.includes('subject=comics') ? jsonResponse({ docs }) : undefined
@@ -55,6 +73,16 @@ const myMemoryRoute = (translations: Record<string, string>): FetchRoute => (url
 }
 
 const emptyOk: FetchRoute = () => jsonResponse({})
+
+// altTitles/tmdbRef servono solo al controllo doppioni: li togliamo dove il test verifica
+// i campi mostrati all'utente.
+const shownFields = (results: MediaSearchResult[]) =>
+  results.map((result) => {
+    const rest = { ...result }
+    delete rest.altTitles
+    delete rest.tmdbRef
+    return rest
+  })
 
 beforeEach(() => {
   vi.unstubAllEnvs()
@@ -138,7 +166,7 @@ describe('searchMedia: video', () => {
 
     const results = await searchMedia('video', 'bleach', 'en')
 
-    expect(results).toEqual([{ title: 'Bleach', year: '2004', studio: '', author: '', coverUrl: undefined }])
+    expect(shownFields(results)).toEqual([{ title: 'Bleach', year: '2004', studio: '', author: '', coverUrl: undefined }])
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('themoviedb.org'))).toBe(false)
   })
 
@@ -177,7 +205,7 @@ describe('searchMedia: video', () => {
 
     const results = await searchMedia('video', 'shingeki', 'it')
 
-    expect(results).toEqual([
+    expect(shownFields(results)).toEqual([
       { title: "L'attacco dei giganti", year: '2013', studio: '', author: '', coverUrl: undefined, originalTitle: 'Attack on Titan' },
     ])
   })
@@ -223,7 +251,7 @@ describe('searchMedia: video', () => {
 
     const results = await searchMedia('video', 'shingeki', 'ja')
 
-    expect(results).toEqual([{ title: '進撃の巨人', year: '2013', studio: '', author: '', coverUrl: undefined }])
+    expect(shownFields(results)).toEqual([{ title: '進撃の巨人', year: '2013', studio: '', author: '', coverUrl: undefined }])
   })
 
   it('does not call Shikimori for a non-Russian-script query', async () => {
@@ -233,7 +261,7 @@ describe('searchMedia: video', () => {
 
     await searchMedia('video', 'One Piece', 'en')
 
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('shikimori.one'))).toBe(false)
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('shikimori.io'))).toBe(false)
   })
 
   it('recovers if TMDB fails but AniList succeeds', async () => {
@@ -362,6 +390,44 @@ describe('searchMedia: manga', () => {
 })
 
 describe('searchMedia: books and audiobooks', () => {
+  it('ranks results by how well they match the query (exact title first, author words count too)', async () => {
+    const fetchMock = routedFetch(
+      googleBooksRoute([
+        { volumeInfo: { title: 'Евангелие от Агасфера', publishedDate: '2022', authors: ['Лебедько'] } },
+        { volumeInfo: { title: 'Мистики и тамплиеры', publishedDate: '1998', authors: ['Никитин'] } },
+        { volumeInfo: { title: 'Агасфер. Вечный жид', publishedDate: '2015', authors: ['Эжен Сю'] } },
+        { volumeInfo: { title: 'Агасфер', publishedDate: '2018', authors: ['Эжен Сю'] } },
+      ]),
+      openLibraryRoute([]),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const byTitle = await searchMedia('book', 'агасфер', 'ru')
+    expect(byTitle.map((r) => r.title)).toEqual(['Агасфер', 'Агасфер. Вечный жид', 'Евангелие от Агасфера', 'Мистики и тамплиеры'])
+
+    const withAuthor = await searchMedia('book', 'вечный жид сю', 'ru')
+    expect(withAuthor[0].title).toBe('Агасфер. Вечный жид')
+  })
+
+  it('keeps books with the same title but different authors, and merges the same author written differently', async () => {
+    const fetchMock = routedFetch(
+      googleBooksRoute([
+        { volumeInfo: { title: 'Агасфер', publishedDate: '2018', authors: ['Эжен Сю'] } },
+        { volumeInfo: { title: 'Агасфер', publishedDate: '2009', authors: ['Александр Шойхет'] } },
+      ]),
+      openLibraryRoute([{ title: 'Агасфер', author_name: ['Сю, Эжен'], first_publish_year: 1844, cover_i: 42 }]),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const results = await searchMedia('book', 'Агасфер', 'ru')
+
+    expect(results.map((r) => [r.title, r.author, r.year])).toEqual([
+      ['Агасфер', 'Эжен Сю', '2018'],
+      ['Агасфер', 'Александр Шойхет', '2009'],
+    ])
+    expect(results[0].coverUrl).toBe('https://covers.openlibrary.org/b/id/42-M.jpg')
+  })
+
   it('queries Google Books restricted to the given locale and maps fields', async () => {
     const fetchMock = routedFetch(
       googleBooksRoute([
@@ -502,6 +568,74 @@ describe('searchMedia: games', () => {
     ])
   })
 
+  it('maps Wikidata games (keyless), skipping non-game entities, with developer, first release year and Wikipedia cover', async () => {
+    vi.stubEnv('VITE_RAWG_API_KEY', '')
+    const claim = (value: unknown) => ({ mainsnak: { datavalue: { value } } })
+    const fetchMock = routedFetch(
+      igdbRoute([]),
+      freeToGameRoute([]),
+      cheapSharkRoute([]),
+      wikidataRoute(
+        [{ id: 'Q1346174' }, { id: 'Q467078' }],
+        {
+          Q1346174: {
+            labels: { en: { value: 'InFamous' } },
+            claims: {
+              P31: [claim({ id: 'Q7889' })],
+              P178: [claim({ id: 'Q916714' })],
+              P577: [claim({ time: '+2009-06-05T00:00:00Z' }), claim({ time: '+2009-05-26T00:00:00Z' })],
+            },
+            sitelinks: { enwiki: { title: 'Infamous (video game)' } },
+          },
+          // Film con lo stesso nome: va scartato (P31 non è un videogioco).
+          Q467078: { labels: { en: { value: 'Infamous' } }, claims: { P31: [claim({ id: 'Q11424' })] } },
+          Q916714: { labels: { mul: { value: 'Sucker Punch Productions' } } },
+        },
+        { 'Infamous (video game)': 'https://upload.wikimedia.org/infamous.jpg' },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const results = await searchMedia('game', 'infamous', 'en')
+
+    expect(results).toEqual([
+      { title: 'InFamous', year: '2009', studio: 'Sucker Punch Productions', author: '', coverUrl: 'https://upload.wikimedia.org/infamous.jpg' },
+    ])
+  })
+
+  it('keeps same-title works with different years apart when there is no author to tell them apart', async () => {
+    vi.stubEnv('VITE_RAWG_API_KEY', '')
+    const fetchMock = routedFetch(
+      igdbRoute([
+        { title: 'Doom', year: '1993', studio: 'id Software' },
+        { title: 'Doom', year: '2016', studio: 'id Software' },
+      ]),
+      freeToGameRoute([]),
+      cheapSharkRoute([{ external: 'DOOM', thumb: 'https://example.com/doom.jpg' }]),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const results = await searchMedia('game', 'doom', 'en')
+
+    expect(results.map((r) => r.year)).toEqual(['1993', '2016'])
+  })
+
+  it('fills a missing cover from a duplicate found by another source', async () => {
+    vi.stubEnv('VITE_RAWG_API_KEY', '')
+    const fetchMock = routedFetch(
+      igdbRoute([{ title: 'Hades', year: '2020', studio: 'Supergiant Games' }]),
+      freeToGameRoute([]),
+      cheapSharkRoute([{ external: 'HADES', thumb: 'https://example.com/hades.jpg' }]),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const results = await searchMedia('game', 'hades', 'en')
+
+    expect(results).toEqual([
+      { title: 'Hades', year: '2020', studio: 'Supergiant Games', author: '', coverUrl: 'https://example.com/hades.jpg' },
+    ])
+  })
+
   it('maps CheapShark results', async () => {
     vi.stubEnv('VITE_RAWG_API_KEY', '')
     const fetchMock = routedFetch(
@@ -542,28 +676,82 @@ describe('searchMedia: games', () => {
     expect(freeToGameCallsAfter).toBe(freeToGameCallsBefore)
   })
 
-  it('translates game titles into the site language when it is not English', async () => {
-    vi.stubEnv('VITE_RAWG_API_KEY', 'test-rawg-key')
+  it('does not machine-translate game titles (keeps the official name)', async () => {
+    vi.stubEnv('VITE_RAWG_API_KEY', '')
     const fetchMock = routedFetch(
-      myMemoryRoute({ mario: 'mario', 'Super Mario Odyssey': 'Super Mario Odyssey (IT)' }),
-      rawgRoute([{ name: 'Super Mario Odyssey', released: '2017-10-27', background_image: 'https://example.com/mario.jpg' }]),
-      igdbRoute([]),
+      myMemoryRoute({ 'hollow knight': 'hollow knight', 'Hollow Knight': 'Cavaliere cavo' }),
+      igdbRoute([{ title: 'Hollow Knight', year: '2017', studio: 'Team Cherry' }]),
       freeToGameRoute([]),
       cheapSharkRoute([]),
     )
     vi.stubGlobal('fetch', fetchMock)
 
-    const results = await searchMedia('game', 'mario', 'it')
+    const results = await searchMedia('game', 'hollow knight', 'it')
 
-    expect(results).toEqual([
+    expect(results).toEqual([{ title: 'Hollow Knight', year: '2017', studio: 'Team Cherry', author: '', coverUrl: undefined }])
+  })
+
+  it('uses the real localized name from Wikidata and merges it with the English result from another source', async () => {
+    vi.stubEnv('VITE_RAWG_API_KEY', '')
+    const claim = (value: unknown) => ({ mainsnak: { datavalue: { value } } })
+    const fetchMock = routedFetch(
+      myMemoryRoute({}),
+      igdbRoute([{ title: 'The Witcher 3: Wild Hunt', year: '2015', studio: 'CD Projekt Red', coverUrl: 'https://example.com/w3.jpg' }]),
+      freeToGameRoute([]),
+      cheapSharkRoute([]),
+      wikidataRoute(
+        [{ id: 'Q107727' }],
+        {
+          Q107727: {
+            labels: { ru: { value: 'Ведьмак 3: Дикая Охота' }, en: { value: 'The Witcher 3: Wild Hunt' } },
+            claims: { P31: [claim({ id: 'Q7889' })], P577: [claim({ time: '+2015-05-19T00:00:00Z' })] },
+          },
+        },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const results = await searchMedia('game', 'witcher 3', 'ru')
+
+    expect(shownFields(results)).toEqual([
       {
-        title: 'Super Mario Odyssey (IT)',
-        year: '2017',
-        studio: '',
+        title: 'Ведьмак 3: Дикая Охота',
+        originalTitle: 'The Witcher 3: Wild Hunt',
+        year: '2015',
+        studio: 'CD Projekt Red',
         author: '',
-        coverUrl: 'https://example.com/mario.jpg',
-        originalTitle: 'Super Mario Odyssey',
+        coverUrl: 'https://example.com/w3.jpg',
       },
     ])
+  })
+})
+
+describe('fetchResultDetails', () => {
+  it('returns production companies and all translated titles for a TMDB movie', async () => {
+    vi.stubEnv('VITE_TMDB_API_KEY', 'test-tmdb-key')
+    const fetchMock = routedFetch((url) =>
+      url.includes('/movie/335984?')
+        ? jsonResponse({
+            production_companies: [{ name: 'Alcon Entertainment' }, { name: 'Columbia Pictures' }, { name: 'Scott Free' }],
+            translations: { translations: [{ data: { title: 'Бегущий по лезвию 2049' } }, { data: { title: '' } }] },
+          })
+        : undefined,
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const details = await fetchResultDetails({
+      title: 'Blade Runner 2049',
+      year: '2017',
+      studio: '',
+      author: '',
+      tmdbRef: { type: 'movie', id: 335984 },
+    })
+
+    expect(details).toEqual({ altTitles: ['Бегущий по лезвию 2049'], studio: 'Alcon Entertainment / Columbia Pictures' })
+  })
+
+  it('works without a TMDB reference (uses the titles already known)', async () => {
+    const details = await fetchResultDetails({ title: 'Ведьмак 3', originalTitle: 'The Witcher 3', year: '', studio: '', author: '' })
+    expect(details).toEqual({ altTitles: ['The Witcher 3'], studio: '' })
   })
 })

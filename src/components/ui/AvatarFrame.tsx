@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { rankForStreak, type RankId } from '@/lib/ranks'
 import { colorForUid, initialFor } from '@/lib/avatar'
 import { RankRoninIcon, RankAshigaruIcon, RankSamuraiIcon, RankDaimyoIcon, RankShogunIcon, ProfileIcon } from '@/components/ui/icons'
@@ -57,6 +57,9 @@ export const AvatarFrame = ({ streak, uid, displayName, photoUrl, size = 132, sh
   const SealIcon = SEAL_ICONS[rank.id]
   const frameRef = useRef<HTMLDivElement>(null)
   const coreRef = useRef<HTMLDivElement>(null)
+  // Foto che non si carica (link scaduto, Storage non raggiungibile): si torna all'iniziale.
+  const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
+  const showPhoto = !!photoUrl && photoUrl !== brokenPhotoUrl
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -142,10 +145,10 @@ export const AvatarFrame = ({ streak, uid, displayName, photoUrl, size = 132, sh
       <div
         ref={coreRef}
         className="avatar-frame__core"
-        style={!photoUrl ? { backgroundColor: colorForUid(uid) } : undefined}
+        style={!showPhoto ? { backgroundColor: colorForUid(uid) } : undefined}
       >
-        {photoUrl ? (
-          <img src={photoUrl} alt="" className="avatar-frame__photo" />
+        {showPhoto ? (
+          <img src={photoUrl} alt="" referrerPolicy="no-referrer" className="avatar-frame__photo" onError={() => setBrokenPhotoUrl(photoUrl)} />
         ) : (
           initialFor(displayName)
         )}

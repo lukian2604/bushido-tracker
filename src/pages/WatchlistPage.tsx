@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaSearchBox } from '@/components/ui/MediaSearchBox'
+import { CoverImage } from '@/components/ui/CoverImage'
+import { findDuplicateItem } from '@/lib/watchlist-duplicates'
+import { fetchResultDetails } from '@/services/media-search'
 import {
   EditIcon,
   DeleteIcon,
@@ -93,6 +96,10 @@ export const WatchlistPage = () => {
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null)
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [coverError, setCoverError] = useState('')
+  const [brokenFormCoverUrl, setBrokenFormCoverUrl] = useState('')
+  // Titoli alternativi del risultato di ricerca scelto (altre lingue), legati al titolo
+  // per cui valgono: se l'utente riscrive il titolo a mano non si usano più.
+  const [selectedAltTitles, setSelectedAltTitles] = useState<{ forTitle: string; titles: string[] }>({ forTitle: '', titles: [] })
   const [isExportingPdf, setIsExportingPdf] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
 
@@ -195,9 +202,12 @@ export const WatchlistPage = () => {
     }
   }
 
+  const altTitles = selectedAltTitles.forTitle && selectedAltTitles.forTitle === form.title ? selectedAltTitles.titles : []
+  const duplicateItem = isItemFormOpen ? findDuplicateItem(items, { ...form, altTitles }, editingItemId) : undefined
+
   const onItemSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!user || !activeCategoryId) return
+    if (!user || !activeCategoryId || duplicateItem) return
 
     if (editingItemId) {
       await updateItem(user.uid, activeCategoryId, editingItemId, form)
@@ -229,6 +239,13 @@ export const WatchlistPage = () => {
   }
 
   const onSelectSearchResult = (result: MediaSearchResult) => {
+    const chosenTitle = result.title || form.title
+    setSelectedAltTitles({ forTitle: chosenTitle, titles: [result.originalTitle, ...(result.altTitles || [])].filter((title): title is string => !!title) })
+    fetchResultDetails(result).then(({ altTitles, studio }) => {
+      setSelectedAltTitles((current) => (current.forTitle === chosenTitle ? { forTitle: chosenTitle, titles: altTitles } : current))
+      // Riempie lo studio solo se è ancora vuoto e il titolo è quello scelto (mai sovrascrivere a mano).
+      if (studio) setForm((current) => (current.title === chosenTitle && !current.studio ? { ...current, studio } : current))
+    })
     setForm((current) => ({
       ...current,
       title: result.title || current.title,
@@ -509,13 +526,13 @@ export const WatchlistPage = () => {
 
             <form onSubmit={onItemSubmit} className="grid gap-4 sm:grid-cols-2">
               <div className="flex items-center gap-3 sm:col-span-2">
-                {form.coverUrl ? (
-                  <img src={form.coverUrl} alt="" className="h-16 w-12 flex-none rounded object-cover" />
-                ) : (
-                  <span className="flex h-16 w-12 flex-none items-center justify-center rounded bg-(--color-ink-20) text-[10px] text-(--color-ink-40)">
-                    {t('watchlist.tableTitle')}
-                  </span>
-                )}
+                <CoverImage
+                  src={form.coverUrl}
+                  className="h-16 w-12 flex-none rounded object-cover"
+                  zoomable
+                  alt={form.title}
+                  onBrokenChange={(isBroken) => setBrokenFormCoverUrl(isBroken ? form.coverUrl : '')}
+                />
                 <input
                   ref={coverInputRef}
                   type="file"
@@ -542,6 +559,11 @@ export const WatchlistPage = () => {
                     </button>
                   )}
                   {coverError && <p className="text-[11px] text-(--color-accent)">{coverError}</p>}
+                  {!coverError && !!form.coverUrl && form.coverUrl === brokenFormCoverUrl && (
+                    <p className="max-w-60 text-[11px] leading-snug text-(--color-parchment-muted)">
+                      {t('watchlist.coverUnavailable')}
+                    </p>
+                  )}
                 </div>
               </div>
               <Field
@@ -573,8 +595,20 @@ export const WatchlistPage = () => {
                 onChange={(value) => setForm((current) => ({ ...current, status: value as WatchlistStatus }))}
                 options={statusOptions}
               />
+              {duplicateItem && (
+                <p
+                  role="alert"
+                  className="rounded-lg border px-3.5 py-2.5 text-sm text-(--color-parchment) sm:col-span-2"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-gold) 45%, transparent)',
+                    backgroundColor: 'color-mix(in srgb, var(--color-gold) 10%, transparent)',
+                  }}
+                >
+                  {t('watchlist.duplicateItem').replace('{title}', duplicateItem.title)}
+                </p>
+              )}
               <div className="flex gap-3 sm:col-span-2">
-                <Button type="submit">
+                <Button type="submit" disabled={!!duplicateItem}>
                   {editingItemId ? t('watchlist.updateItemButton') : t('watchlist.addItemButton')}
                 </Button>
                 <Button type="button" variant="ghost" onClick={onCancelItemForm}>
@@ -648,7 +682,7 @@ export const WatchlistPage = () => {
                       <tr key={item.id} className="hover:bg-(--color-parchment)/[0.03]">
                         <td className="border-b border-(--color-border) p-3 text-sm font-medium text-(--color-parchment)">
                           <div className="flex items-center gap-2.5">
-                            {item.coverUrl && <img src={item.coverUrl} alt="" className="h-9 w-6.5 flex-none rounded object-cover" />}
+                            <CoverImage src={item.coverUrl} className="h-9 w-6.5 flex-none rounded object-cover" fallback={null} zoomable alt={item.title} />
                             {item.title}
                           </div>
                         </td>
@@ -728,7 +762,7 @@ export const WatchlistPage = () => {
                   <div key={item.id} className="rounded-xl border border-(--color-border) bg-(--color-ink) p-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 gap-2.5">
-                        {item.coverUrl && <img src={item.coverUrl} alt="" className="h-12 w-9 flex-none rounded object-cover" />}
+                        <CoverImage src={item.coverUrl} className="h-12 w-9 flex-none rounded object-cover" fallback={null} zoomable alt={item.title} />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-(--color-parchment)">{item.title}</p>
                           <p className="mt-0.5 text-xs text-(--color-parchment-muted)">

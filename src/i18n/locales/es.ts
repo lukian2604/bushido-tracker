@@ -226,6 +226,8 @@ export default {
   'watchlist.searchFormat.ona': 'ONA',
   'watchlist.searchFormat.music': 'Vídeo Musical',
   'watchlist.removeCover': 'Quitar portada',
+  'watchlist.coverUnavailable': 'Portada no disponible en la fuente — puedes subir la tuya.',
+  'watchlist.duplicateItem': '«{title}» ya está en esta colección.',
 
   'watchlist.addCollectionCard': 'Nueva colección',
   'watchlist.emojiHint': 'Escribe o pega cualquier emoji que quieras — los de abajo son solo atajos rápidos.',
@@ -277,6 +279,8 @@ export default {
   'friends.searchPlaceholder': 'Buscar por nombre de usuario…',
   'friends.searchNoResults': 'No se encontró ningún guerrero con ese nombre de usuario.',
   'friends.alreadyFriends': 'Ya sois amigos',
+  'friends.viewProfile': 'Ver perfil',
+  'friends.profileRankTitle': 'Rango',
   'friends.requestPending': 'Pendiente',
   'friends.sendRequestButton': 'Añadir',
   'friends.requestsTitle': 'Solicitudes de amistad',

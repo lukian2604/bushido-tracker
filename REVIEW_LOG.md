@@ -506,3 +506,89 @@ Non ho fatto nessun commit in tutta questa sessione di lavoro — tutto è ancor
 - **Perché** — Richiesta diretta tua di ripulire da "file che non servono... sono solo inutili" prima di considerare il progetto pronto.
 - **File toccati** — Solo cancellazioni, elencate sopra. Nessun file di codice toccato in questa parte.
 - **Da controllare tu** — Se vuoi comunque tenere `GAME_APIS.md` come riferimento futuro (es. per valutare Steam Store/Giant Bomb/MobyGames più avanti), dimmelo e lo ripristino — l'ho tolto perché il suo contenuto principale è ormai implementato, non perché fosse sbagliato.
+
+---
+
+## 2026-09-27 — Test regole con emulatore + fix cancellazione Storage
+
+- **Aggiunti `firebase.json` e `.firebaserc`** (progetto `bushido-tracker`): mancavano, quindi `firebase deploy --only firestore:rules,storage:rules` e l'emulatore non potevano funzionare dalla cartella del progetto.
+- **Test regole con emulatore** (`@firebase/rules-unit-testing`, script temporaneo, 19 casi): creazione utente alla registrazione, prenotazione username in batch, blocco username multipli, isolamento dati tra utenti, salvataggio dashboard, profilo pubblico (create, +1, stesso valore, reset a 0, salto +50 bloccato, +5 dopo 10 giorni offline), upload foto/copertine, blocco SVG.
+- **Bug trovato e corretto in `storage.rules`**: `allow write` includeva il delete, ma i controlli su `request.resource.size`/`contentType` falliscono quando `request.resource` è null (cancellazione) → foto profilo e copertine Watchlist **non si potevano mai eliminare** (anche alla cancellazione account/categoria). Separato `allow delete` (solo proprietario) da `allow create, update`. Ritestato: tutti i 19 casi passano.
+- **Cosa controllare**: dopo il deploy, cambiare/rimuovere la foto profilo e cancellare un elemento Watchlist con copertina caricata a mano.
+
+## 2026-09-27 — Profilo amico (finestra)
+
+- Mancava una vista del profilo di un altro utente (esistevano solo i dati `publicProfiles`). Nuovo `FriendProfileModal`: stessa card "Il tuo rango" del Profilo (cornice animata, kanji in filigrana, rango, streak, barra verso il rango successivo) + nome e @username.
+- **Solo dati già pubblici** (su tua richiesta): niente check-in totali, email, abitudini o Watchlist. Nessuna modifica alle regole Firestore.
+- Si apre cliccando avatar/nome in: risultati ricerca, richieste ricevute/inviate, lista amici. Chiusura con X, clic fuori o Esc. Nuova chiave `friends.viewProfile` in 9 lingue.
+- Lint: i file nuovi/modificati sono puliti; gli 8 errori di `npm run lint` sono preesistenti (hooks/*, WatchlistPage).
+- **Cosa controllare**: aprire il profilo di un amico da desktop e da mobile.
+
+## 2026-09-27 — Ricerca giochi: IGDB anche in locale + sviluppatore
+
+- Problema segnalato: mancano molti giochi (es. inFAMOUS, GTA III originale). Causa: senza chiavi Twitch IGDB non risponde, e restano solo FreeToGame (solo free-to-play) e CheapShark (solo PC in vendita).
+- `vite.config.ts`: middleware di sviluppo che serve `/api/igdb-search` eseguendo la stessa funzione Vercel, con `IGDB_CLIENT_ID`/`IGDB_CLIENT_SECRET` letti dal `.env` (senza prefisso VITE_, mai nel bundle). Prima IGDB funzionava solo su Vercel.
+- `api/igdb-search.ts`: ora restituisce anche lo **sviluppatore** (`involved_companies` con `developer: true`) → compila il campo Sviluppatore.
+- **Cosa controllare**: con le chiavi nel `.env`, cercare "infamous" e "grand theft auto 3" in una categoria Videogiochi.
+
+## 2026-09-27 — Ricerca giochi: Wikidata come fonte completa senza chiave
+
+- Nuova fonte `searchWikidataGamesOnce` in `media-search.ts`: ricerca Wikidata (`wbsearchentities`) → filtro per "istanza di" (videogioco, edizione, remaster, espansione, DLC) → sviluppatore (P178), anno della prima uscita (P577), copertina dall'immagine principale della pagina Wikipedia inglese (box art). Gratuita, senza chiave, CORS ok.
+- Ordine fonti: IGDB (se configurato) → Wikidata → RAWG → FreeToGame → CheapShark (il primo vince nei doppioni).
+- Test dal vivo: "infamous" → InFamous 1/2/Second Son/Festival of Blood/First Light, tutti con Sucker Punch + anno + copertina; "grand theft auto 3" → GTA III (2001, Rockstar North, copertina). Nuovo test unitario (82/82).
+- Nota: Wikimedia limita le raffiche di richieste senza User-Agent (successo nei test da terminale); dal browser non è un problema (UA automatico + debounce 400ms nella casella di ricerca).
+- **Cosa controllare**: cercare qualche gioco console/vecchio in una categoria Videogiochi.
+
+## 2026-09-27 — Copertine: gestione errori + meno copertine mancanti
+
+- Nuovo `CoverImage` (usato in ricerca, modulo elemento, lista/tabella Watchlist): `referrerPolicy="no-referrer"` (evita i blocchi hotlink), `loading="lazy"`, e se l'immagine non si carica mostra un riquadro neutro con icona invece dell'icona "immagine rotta" (nelle righe della lista: nessuna immagine, come quando manca).
+- Nel modulo elemento, copertina della fonte non caricabile → messaggio discreto "Copertina non disponibile dalla fonte — puoi caricarne una tua." (9 lingue, `watchlist.coverUnavailable`), accanto a "Carica copertina".
+- `AvatarFrame`: foto profilo che non si carica → torna all'iniziale colorata.
+- `dedupeByTitle`: ora unisce i doppioni tra fonti riempiendo copertina/anno/studio/autore mancanti (prima scartava il doppione anche se aveva la copertina). Vale per tutte le categorie. Nuovo test (83/83).
+- Wikidata giochi: se manca la copertina da Wikipedia inglese, ripiego sull'immagine P18 da Wikimedia Commons.
+
+## 2026-09-27 — Copertine ingrandibili
+
+- `CoverImage` con `zoomable`: clic sulla copertina (tabella/lista Watchlist e anteprima nel modulo) → vista ingrandita a tutto schermo (portal su body, sfondo scuro sfocato, titolo sotto, chiusura con clic/X/Esc). Nei risultati di ricerca no: lì il clic sceglie il risultato.
+- `src/lib/cover.ts` `largerCoverUrl`: per la vista ingrandita prova la versione grande della stessa fonte (AniList large, TMDB w500, Open Library -L, IGDB cover_big_2x, Commons 900px, Steam header); se fallisce ripiega sull'originale. Test in `cover.test.ts` (85/85).
+
+## 2026-09-27 — Libri: chiave Google Books personale
+
+- Problema: libri in russo ("Агасфер", "Психотрюки"...) → nessun risultato. Causa verificata: Google Books senza chiave risponde 429 "Quota exceeded ... Queries per day" (quota anonima condivisa da tutti), e Open Library ha pochissimi libri russi.
+- Supporto a `VITE_GOOGLE_BOOKS_API_KEY` (facoltativa, aggiunta a `.env.example`): se presente, `&key=` su tutte le chiamate Google Books (libri e fumetti) → quota personale da 1000 ricerche/giorno, gratuita, senza fatturazione.
+- La chiave finisce nel bundle del browser (prefisso VITE_) → va limitata in Google Cloud a "Books API" + referrer del sito.
+
+## 2026-09-27 — Controllo doppioni nella Collezione
+
+- Nuovo `src/lib/watchlist-duplicates.ts` (`findDuplicateItem`): stesso titolo (senza maiuscole/punteggiatura/spazi, anche cirillico/kanji) **e** stesso anno = doppione; anno diverso (remake/nuova edizione) = consentito; se uno dei due non ha l'anno conta solo il titolo. L'elemento in modifica è escluso.
+- Nel modulo Aggiungi/Modifica elemento: avviso dorato in tempo reale "«Titolo» è già in questa collezione." (9 lingue, `watchlist.duplicateItem`) appena scegli un risultato o scrivi il titolo, e pulsante di salvataggio disattivato. Vale per ogni collezione (controllo sulla collezione aperta). Test: 88/88.
+
+## 2026-09-27 — Libri: "Агасфер" di Eugène Sue non trovato
+
+- **Bug in `dedupeByTitle`**: univa per solo titolo, quindi libri diversi con lo stesso titolo (es. "Агасфер" di Eugène Sue e di А. Шойхет) diventavano uno solo e Sue spariva. Ora con lo stesso titolo si uniscono solo se gli autori sono compatibili (uno dei due vuoto, o almeno una parola in comune: "Эжен Сю" = "Сю, Эжен").
+- **Ordine risultati libri**: in parallelo a Google Books normale, una ricerca `intitle:` messa per prima → "Агасфер" di Eugène Sue ora è il primo risultato (prima c'erano libri che citavano la parola solo nel testo). Costa 1 chiamata Google Books in più per ricerca (quota personale 1000/giorno).
+- Nuovo test (89/89). Verificato dal vivo con la chiave.
+
+## 2026-09-27 — Ordinamento per rilevanza (tutte le categorie)
+
+- `rankByRelevance` in `searchMedia`: dopo aver unito le fonti, ordina per somiglianza alla query — titolo identico (100) > inizia con la query (80) > la contiene come frase (60) > tutte le parole presenti in titolo/autore/studio (40) > solo alcune (proporzionale). Considera anche `originalTitle`. Ordinamento stabile: a parità resta l'ordine della fonte.
+- Vale per Libri, Audiolibri, Fumetti/Manga, Video, Giochi. Scrivere anche l'autore ("вечный жид сю") porta il libro giusto in cima.
+- Verificato dal vivo: "Агасфер" → 4 edizioni con titolo esatto in cima (Сю, Жуковский, Шойхет...); "Мастер и Маргарита" → Bulgakov primo; "naruto" → Naruto primo. Nuovo test (90/90).
+- **Notato, non cambiato (da decidere)**: la traduzione automatica dei titoli giochi/anime (voluta, vedi quarta/settima tornata) produce nomi sbagliati sui giochi: "Hollow Knight" → "Cavaliere cavo".
+
+## 2026-09-28 — Giochi senza traduzione automatica, doppioni multilingua, studio film, lingua dei titoli
+
+- **Giochi: niente più traduzione automatica dei titoli** (su tua conferma): "Hollow Knight" diventava "Cavaliere cavo". Ora nome ufficiale; il nome localizzato arriva solo da Wikidata quando esiste davvero (es. "Ведьмак 3: Дикая Охота", con l'inglese sotto). Wikidata è prima nell'ordine delle fonti giochi e viene chiamata una sola volta per ricerca (non anche con la query tradotta) → meno rischio di limite richieste Wikimedia.
+- **Doppioni in lingue diverse**: i risultati portano `altTitles` (AniList romaji/inglese/nativo, Shikimori, titolo originale TMDB, etichette Wikidata). Alla scelta di un risultato, `fetchResultDetails` chiede a TMDB (`/movie|tv/{id}?append_to_response=translations`) i titoli in tutte le lingue → "Blade Runner 2049" riconosce "Бегущий по лезвию 2049" già in collezione, anche per elementi salvati mesi fa. Nessun campo nuovo salvato su Firestore (nessun deploy regole).
+- **Studio dei film/serie**: la ricerca TMDB non dà le case di produzione; la stessa chiamata di dettagli le fornisce → campo Studio compilato (prime due, "A / B", come nelle tue schede) se è vuoto.
+- **Lingua dei titoli = lingua in cui scrivi** (dall'alfabeto), non quella del Paese del profilo: cercando "Война" col Paese Italia arrivava "Rogue - Il solitario". Con l'alfabeto latino resta la lingua del Paese.
+- **Bug doppioni sui film**: "Война" serie 2026 e "Война" film 2007 venivano uniti (stesso titolo, nessun autore). Ora senza autori decide l'anno (±1 tollerato); con autori decidono gli autori (edizioni dello stesso libro restano unite).
+- Test 94/94, build ok, lint: solo gli 8 errori preesistenti.
+
+## 2026-09-28 — Manga/Novel in russo: Shikimori spostato, light novel, ordinamento bilingue
+
+- **Shikimori ha cambiato dominio** (`shikimori.one` → 301 → `shikimori.io`): endpoint e URL copertine aggiornati. Era la causa principale dei titoli russi di anime/manga mancanti. "Наруто: вихрь внутри водоворота" ora primo risultato.
+- **Light novel** nella ricerca Manga/Novel: aggiunte Shikimori `ranobe` (titoli russi veri, formato "novel") e Google Books sui libri normali (prima solo `subject:comics`, che escludeva i romanzi); sulla query tradotta in inglese niente `langRestrict` russo.
+- **Ordinamento**: confronta i risultati sia con la query sia con la sua traduzione inglese (punteggio migliore); parole < 3 lettere ignorate e corrispondenza parziale solo per parole ≥ 4 lettere (prima "в" contava ovunque). Traduzioni memorizzate per non ripetere la chiamata MyMemory.
+- Dal vivo: "Хроники Какаши: Молния в Ледяном Небе" → 1° "Naruto: Kakashi's Story — Lightning in the Frozen Sky"; "Наруто: История Итачи" → 2° la serie Shikimori, 3° "Naruto: Itachi's Story, Vol. 1". I titoli russi amatoriali di singoli volumi non esistono in nessuna fonte: si trovano col nome ufficiale inglese o come serie.
+- Test 94/94, build ok, lint invariato (8 errori preesistenti).
