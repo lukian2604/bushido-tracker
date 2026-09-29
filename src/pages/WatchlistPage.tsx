@@ -286,10 +286,10 @@ export const WatchlistPage = () => {
     }
   }
 
-  const onDeleteItem = async (itemId: string, coverUrl?: string | null) => {
+  const onDeleteItem = async (itemId: string) => {
     if (!user || !activeCategoryId) return
     if (await confirmDialog(t('watchlist.confirmDeleteItem'))) {
-      await deleteItem(user.uid, activeCategoryId, itemId, coverUrl)
+      await deleteItem(user.uid, activeCategoryId, itemId)
     }
   }
 
@@ -771,7 +771,7 @@ export const WatchlistPage = () => {
                             <IconButton variant="edit" onClick={() => onEditItem(item)} aria-label={t('common.edit')}>
                               <EditIcon className="size-4" />
                             </IconButton>
-                            <IconButton variant="delete" onClick={() => onDeleteItem(item.id, item.coverUrl)} aria-label={t('common.delete')}>
+                            <IconButton variant="delete" onClick={() => onDeleteItem(item.id)} aria-label={t('common.delete')}>
                               <DeleteIcon className="size-4" />
                             </IconButton>
                           </div>
@@ -799,7 +799,7 @@ export const WatchlistPage = () => {
                         <IconButton variant="edit" onClick={() => onEditItem(item)} aria-label={t('common.edit')}>
                           <EditIcon className="size-3.5" />
                         </IconButton>
-                        <IconButton variant="delete" onClick={() => onDeleteItem(item.id, item.coverUrl)} aria-label={t('common.delete')}>
+                        <IconButton variant="delete" onClick={() => onDeleteItem(item.id)} aria-label={t('common.delete')}>
                           <DeleteIcon className="size-3.5" />
                         </IconButton>
                       </div>

@@ -1,9 +1,6 @@
 import { deleteUser } from 'firebase/auth'
 import { collection, getDocs, doc, query, where, writeBatch, type DocumentReference } from 'firebase/firestore'
-import { ref, deleteObject } from 'firebase/storage'
-import { auth, db, storage } from '@/firebase/config'
-import type { WatchlistItem } from '@/lib/types'
-import { isFirebaseStorageUrl } from '@/lib/image-data'
+import { auth, db } from '@/firebase/config'
 
 const FLAT_SUBCOLLECTIONS = ['challenges', 'habitGridHabits', 'habitGridMonths']
 
@@ -19,20 +16,12 @@ const commitInChunks = async (refs: DocumentReference[]) => {
   }
 }
 
-// Pulizia best-effort dei file caricati prima del passaggio a Firestore: le immagini
-// nuove stanno nei documenti stessi (già cancellati). Qualunque errore di Storage (file
-// assente, Storage mai attivato sul progetto) non deve bloccare la cancellazione account.
-const deleteStorageObjectIfExists = async (path: string) => {
-  await deleteObject(ref(storage, path)).catch(() => {})
-}
-
 export const deleteAccount = async () => {
   const user = auth.currentUser
   if (!user) return
   const uid = user.uid
 
   const refsToDelete: DocumentReference[] = []
-  const coverUrlsToDelete: string[] = []
 
   for (const subcollection of FLAT_SUBCOLLECTIONS) {
     const snapshot = await getDocs(collection(db, 'users', uid, subcollection))
@@ -42,11 +31,7 @@ export const deleteAccount = async () => {
   const categoriesSnapshot = await getDocs(collection(db, 'users', uid, 'watchlistCategories'))
   for (const categoryDoc of categoriesSnapshot.docs) {
     const itemsSnapshot = await getDocs(collection(db, 'users', uid, 'watchlistCategories', categoryDoc.id, 'items'))
-    itemsSnapshot.docs.forEach((itemDoc) => {
-      refsToDelete.push(itemDoc.ref)
-      const coverUrl = (itemDoc.data() as WatchlistItem).coverUrl
-      if (coverUrl && isFirebaseStorageUrl(coverUrl)) coverUrlsToDelete.push(coverUrl)
-    })
+    itemsSnapshot.docs.forEach((itemDoc) => refsToDelete.push(itemDoc.ref))
     refsToDelete.push(categoryDoc.ref)
   }
 
@@ -66,7 +51,5 @@ export const deleteAccount = async () => {
   refsToDelete.push(doc(db, 'users', uid))
 
   await commitInChunks(refsToDelete)
-  await deleteStorageObjectIfExists(`users/${uid}/profile.jpg`)
-  await Promise.all(coverUrlsToDelete.map((url) => deleteObject(ref(storage, url)).catch(() => {})))
   await deleteUser(user)
 }

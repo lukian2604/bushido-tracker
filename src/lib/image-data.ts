@@ -71,7 +71,3 @@ export const normalizeImageLink = (raw: string): string | null => {
     return null
   }
 }
-
-// Copertine/foto caricate prima di questo cambio vivevano in Firebase Storage: solo
-// quelle vanno cancellate da Storage, i data URL e i link esterni no.
-export const isFirebaseStorageUrl = (url: string) => url.startsWith('https://firebasestorage.googleapis.com/')

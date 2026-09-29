@@ -66,7 +66,6 @@ export const detectCountry = (): string => {
   return LOCALE_DEFAULT_COUNTRY[lang] || 'US'
 }
 
-export const countryName = (code: string): string => COUNTRIES.find((country) => country.code === code)?.name || code
 
 // Lingua prevalente per paese — usata per orientare la lingua dei risultati di ricerca
 // (Watchlist), indipendentemente dalla lingua dell'interfaccia scelta dall'utente.

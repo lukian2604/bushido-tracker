@@ -12,9 +12,8 @@ import {
   writeBatch,
   Timestamp,
 } from 'firebase/firestore'
-import { ref, deleteObject } from 'firebase/storage'
-import { compressImageToDataUrl, COVER_SIZE, isFirebaseStorageUrl } from '@/lib/image-data'
-import { db, storage } from '@/firebase/config'
+import { compressImageToDataUrl, COVER_SIZE } from '@/lib/image-data'
+import { db } from '@/firebase/config'
 import type { MediaType, WatchlistCategory, WatchlistCategoryWithProgress, WatchlistItem, WatchlistStatus } from '@/lib/types'
 
 const categoriesRef = (uid: string) => collection(db, 'users', uid, 'watchlistCategories')
@@ -46,16 +45,10 @@ export const createCategory = (uid: string, name: string, mediaType: MediaType =
 
 export const deleteCategory = async (uid: string, categoryId: string) => {
   const itemsSnapshot = await getDocs(itemsRef(uid, categoryId))
-  const coverUrls = itemsSnapshot.docs
-    .map((docSnapshot) => (docSnapshot.data() as WatchlistItem).coverUrl)
-    .filter((url): url is string => !!url)
-
   const batch = writeBatch(db)
   itemsSnapshot.docs.forEach((itemDoc) => batch.delete(itemDoc.ref))
   batch.delete(doc(db, 'users', uid, 'watchlistCategories', categoryId))
   await batch.commit()
-
-  await deleteLegacyStorageCovers(coverUrls)
 }
 
 export const updateCategory = (uid: string, categoryId: string, data: { name?: string; mediaType?: MediaType; emoji?: string | null }) => {
@@ -111,17 +104,8 @@ export const updateItem = (uid: string, categoryId: string, itemId: string, { ti
   return updateDoc(itemRef, { title, year, studio, ...(author ? { author } : {}), ...(coverUrl ? { coverUrl } : {}), status })
 }
 
-export const deleteItem = async (uid: string, categoryId: string, itemId: string, coverUrl?: string | null) => {
+export const deleteItem = async (uid: string, categoryId: string, itemId: string) => {
   await deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId))
-  if (coverUrl) await deleteLegacyStorageCovers([coverUrl])
-}
-
-// Solo le copertine caricate prima del passaggio a Firestore stanno in Storage: data URL e
-// link esterni non vanno toccati (e ref() su un data URL lancerebbe un errore).
-export const deleteLegacyStorageCovers = async (coverUrls: string[]) => {
-  await Promise.all(
-    coverUrls.filter(isFirebaseStorageUrl).map((url) => deleteObject(ref(storage, url)).catch(() => {})),
-  )
 }
 
 // Copertina compressa (max 300×450, JPEG) restituita come data URL da salvare nel campo

@@ -144,9 +144,3 @@ export interface WeeklyActivityDay {
   total: number
 }
 
-export interface HabitGridMonthSummary {
-  date: Date
-  isCurrent: boolean
-  checked: number
-  total: number
-}

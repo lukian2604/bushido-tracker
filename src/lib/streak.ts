@@ -11,17 +11,3 @@ export const computeCurrentStreak = (series: WeeklyActivityDay[]): number => {
   }
   return streak
 }
-
-export const computeLongestStreak = (series: WeeklyActivityDay[]): number => {
-  let longest = 0
-  let current = 0
-  for (const day of series) {
-    if (day.checked > 0) {
-      current += 1
-      longest = Math.max(longest, current)
-    } else {
-      current = 0
-    }
-  }
-  return longest
-}
