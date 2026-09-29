@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserDoc } from '@/hooks/useUserDoc'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { PaletteSwitcher } from '@/components/ui/PaletteSwitcher'
@@ -26,7 +27,8 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const streak = useCurrentStreak(user?.uid)
-  const displayName = user?.displayName || user?.email || ''
+  const userDoc = useUserDoc(user?.uid)
+  const displayName = userDoc?.displayName || user?.displayName || user?.email || ''
 
   return (
     <>
@@ -83,7 +85,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       </div>
 
       <div className="mt-4 flex items-center gap-3 rounded-xl border border-(--color-border) p-3">
-        <AvatarFrame streak={streak} uid={user?.uid || ''} displayName={displayName} size={40} showSeal={false} />
+        <AvatarFrame streak={streak} uid={user?.uid || ''} displayName={displayName} photoUrl={userDoc?.photoURL} size={40} showSeal={false} />
         <span className="flex-grow truncate text-sm text-(--color-parchment)">{displayName}</span>
         <button
           type="button"

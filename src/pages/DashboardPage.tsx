@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserDoc } from '@/hooks/useUserDoc'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useDashboardConfig } from '@/hooks/useDashboardConfig'
@@ -167,7 +168,8 @@ export const DashboardPage = () => {
 
   const greetingHour = new Date().getHours()
   const greetingKey = greetingHour < 12 ? 'dashboard.greetingMorning' : greetingHour < 18 ? 'dashboard.greetingAfternoon' : 'dashboard.greetingEvening'
-  const displayName = user?.displayName || user?.email?.split('@')[0] || ''
+  const userDoc = useUserDoc(user?.uid)
+  const displayName = userDoc?.displayName || user?.displayName || user?.email?.split('@')[0] || ''
   const todayLabel = new Date().toLocaleDateString(localeTag, { weekday: 'long', month: 'long', day: 'numeric' })
 
   const categorySlices = watchlistCategories.map((category, index) => ({
@@ -358,7 +360,7 @@ export const DashboardPage = () => {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          {user && <AvatarFrame streak={currentStreak} uid={user.uid} displayName={displayName} size={56} showSeal={false} />}
+          {user && <AvatarFrame streak={currentStreak} uid={user.uid} displayName={displayName} photoUrl={userDoc?.photoURL} size={56} showSeal={false} />}
           <div>
             <h1 className="text-2xl font-semibold text-(--color-parchment)">
               {t(greetingKey)}, {displayName} 👋
