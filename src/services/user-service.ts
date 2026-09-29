@@ -1,8 +1,8 @@
 import { doc, getDoc, setDoc, writeBatch, onSnapshot, serverTimestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import type { User } from 'firebase/auth'
-import { db, storage } from '@/firebase/config'
+import { db } from '@/firebase/config'
 import { detectCountry } from '@/lib/countries'
+import { compressImageToDataUrl, PROFILE_PHOTO_SIZE } from '@/lib/image-data'
 import { generateUniqueUsername } from '@/services/friend-service'
 import type { DashboardWidgetConfig, DashboardWidgetLayout, UserDoc } from '@/lib/types'
 
@@ -69,12 +69,22 @@ export const setDashboardLayout = (uid: string, dashboardLayout: DashboardWidget
   return setDoc(doc(db, 'users', uid), { dashboardLayout }, { merge: true })
 }
 
+// Foto compressa (256 px, JPEG) salvata direttamente nel documento utente — niente
+// Firebase Storage (vedi lib/image-data.ts).
 export const uploadProfilePhoto = async (uid: string, file: File): Promise<string> => {
-  const photoRef = ref(storage, `users/${uid}/profile.jpg`)
-  await uploadBytes(photoRef, file, { contentType: file.type })
-  const photoURL = await getDownloadURL(photoRef)
+  const photoURL = await compressImageToDataUrl(file, PROFILE_PHOTO_SIZE)
   await setDoc(doc(db, 'users', uid), { photoURL }, { merge: true })
   return photoURL
+}
+
+// Tour di benvenuto: salvato sul profilo (non in localStorage) così non ricompare su un
+// altro dispositivo; false per rivederlo dal Profilo.
+export const setOnboardingDone = (uid: string, onboardingDone: boolean) => {
+  return setDoc(doc(db, 'users', uid), { onboardingDone }, { merge: true })
+}
+
+export const setProfilePhotoLink = (uid: string, photoURL: string) => {
+  return setDoc(doc(db, 'users', uid), { photoURL }, { merge: true })
 }
 
 export const subscribeToUser = (uid: string, callback: (userDoc: UserDoc | null) => void) => {

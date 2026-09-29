@@ -12,7 +12,8 @@ import {
   writeBatch,
   Timestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { ref, deleteObject } from 'firebase/storage'
+import { compressImageToDataUrl, COVER_SIZE, isFirebaseStorageUrl } from '@/lib/image-data'
 import { db, storage } from '@/firebase/config'
 import type { MediaType, WatchlistCategory, WatchlistCategoryWithProgress, WatchlistItem, WatchlistStatus } from '@/lib/types'
 
@@ -54,7 +55,7 @@ export const deleteCategory = async (uid: string, categoryId: string) => {
   batch.delete(doc(db, 'users', uid, 'watchlistCategories', categoryId))
   await batch.commit()
 
-  await Promise.all(coverUrls.map((url) => deleteObject(ref(storage, url)).catch(() => {})))
+  await deleteLegacyStorageCovers(coverUrls)
 }
 
 export const updateCategory = (uid: string, categoryId: string, data: { name?: string; mediaType?: MediaType; emoji?: string | null }) => {
@@ -112,12 +113,17 @@ export const updateItem = (uid: string, categoryId: string, itemId: string, { ti
 
 export const deleteItem = async (uid: string, categoryId: string, itemId: string, coverUrl?: string | null) => {
   await deleteDoc(doc(db, 'users', uid, 'watchlistCategories', categoryId, 'items', itemId))
-  if (coverUrl) await deleteObject(ref(storage, coverUrl)).catch(() => {})
+  if (coverUrl) await deleteLegacyStorageCovers([coverUrl])
 }
 
-export const uploadItemCover = async (uid: string, file: File): Promise<string> => {
-  const fileId = crypto.randomUUID()
-  const coverRef = ref(storage, `users/${uid}/watchlist-covers/${fileId}.jpg`)
-  await uploadBytes(coverRef, file, { contentType: file.type })
-  return getDownloadURL(coverRef)
+// Solo le copertine caricate prima del passaggio a Firestore stanno in Storage: data URL e
+// link esterni non vanno toccati (e ref() su un data URL lancerebbe un errore).
+export const deleteLegacyStorageCovers = async (coverUrls: string[]) => {
+  await Promise.all(
+    coverUrls.filter(isFirebaseStorageUrl).map((url) => deleteObject(ref(storage, url)).catch(() => {})),
+  )
 }
+
+// Copertina compressa (max 300×450, JPEG) restituita come data URL da salvare nel campo
+// coverUrl dell'elemento — niente Firebase Storage (vedi lib/image-data.ts).
+export const uploadItemCover = (file: File): Promise<string> => compressImageToDataUrl(file, COVER_SIZE)

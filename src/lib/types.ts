@@ -30,6 +30,7 @@ export interface UserDoc {
   username?: string
   dashboardConfig?: DashboardWidgetConfig[]
   dashboardLayout?: DashboardWidgetLayout[]
+  onboardingDone?: boolean
   createdAt: Timestamp | null
 }
 

@@ -10,7 +10,9 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { AvatarFrame } from '@/components/ui/AvatarFrame'
 import { PalettePicker } from '@/components/ui/PalettePicker'
 import { EditIcon } from '@/components/ui/icons'
-import { subscribeToUser, setDisplayName, setCountry, uploadProfilePhoto } from '@/services/user-service'
+import { subscribeToUser, setDisplayName, setCountry, uploadProfilePhoto, setProfilePhotoLink, setOnboardingDone } from '@/services/user-service'
+import { ImageLinkInput } from '@/components/ui/ImageLinkInput'
+import { ALLOWED_IMAGE_INPUT_TYPES, MAX_IMAGE_INPUT_BYTES } from '@/lib/image-data'
 import { deleteAccount } from '@/services/account-service'
 import { isUsernameAvailable, claimUsername } from '@/services/friend-service'
 import { isValidUsername, normalizeUsername } from '@/lib/username'
@@ -19,8 +21,6 @@ import { COUNTRIES, detectCountry } from '@/lib/countries'
 import type { UserDoc } from '@/lib/types'
 import type { FirebaseError } from 'firebase/app'
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export const ProfilePage = () => {
   const { user } = useAuth()
@@ -40,6 +40,7 @@ export const ProfilePage = () => {
   const [isSavingUsername, setIsSavingUsername] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [photoError, setPhotoError] = useState('')
+  const [isPhotoLinkOpen, setIsPhotoLinkOpen] = useState(false)
   const { streak, totalCheckIns } = useProfileStats(user?.uid)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -115,11 +116,11 @@ export const ProfilePage = () => {
     if (!file) return
     setPhotoError('')
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    if (!ALLOWED_IMAGE_INPUT_TYPES.includes(file.type)) {
       setPhotoError(t('profile.photoErrorType'))
       return
     }
-    if (file.size > MAX_PHOTO_BYTES) {
+    if (file.size > MAX_IMAGE_INPUT_BYTES) {
       setPhotoError(t('profile.photoErrorSize'))
       return
     }
@@ -131,6 +132,16 @@ export const ProfilePage = () => {
       setPhotoError(t('profile.photoErrorGeneric'))
     } finally {
       setIsUploadingPhoto(false)
+    }
+  }
+
+  const onApplyPhotoLink = async (url: string) => {
+    setPhotoError('')
+    try {
+      await setProfilePhotoLink(user.uid, url)
+      setIsPhotoLinkOpen(false)
+    } catch {
+      setPhotoError(t('profile.photoErrorGeneric'))
     }
   }
 
@@ -170,9 +181,12 @@ export const ProfilePage = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept={ALLOWED_IMAGE_TYPES.join(',')}
+              accept={ALLOWED_IMAGE_INPUT_TYPES.join(',')}
               className="hidden"
-              onChange={(event) => onPhotoSelected(event.target.files?.[0])}
+              onChange={(event) => {
+                onPhotoSelected(event.target.files?.[0])
+                event.target.value = ''
+              }}
             />
             <button
               type="button"
@@ -182,6 +196,17 @@ export const ProfilePage = () => {
             >
               {isUploadingPhoto ? t('profile.photoUploading') : t('profile.changePhotoButton')}
             </button>
+            {isPhotoLinkOpen ? (
+              <ImageLinkInput onApply={onApplyPhotoLink} onCancel={() => setIsPhotoLinkOpen(false)} />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsPhotoLinkOpen(true)}
+                className="text-[11px] text-(--color-ink-40) hover:text-(--color-gold)"
+              >
+                {t('image.useLink')}
+              </button>
+            )}
             {photoError && <p className="max-w-32 text-center text-[11px] text-(--color-accent)">{photoError}</p>}
           </div>
           <div className="min-w-0 flex-1 text-center sm:text-left">
@@ -303,6 +328,13 @@ export const ProfilePage = () => {
           <div className="mt-4">
             <PalettePicker />
           </div>
+          <button
+            type="button"
+            onClick={() => setOnboardingDone(user.uid, false)}
+            className="mt-5 text-xs font-medium text-(--color-parchment-muted) hover:text-(--color-gold)"
+          >
+            {t('profile.replayTour')}
+          </button>
         </article>
 
         <article className="rounded-2xl border border-(--color-accent)/30 bg-(--color-ink-10) p-6">

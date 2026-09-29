@@ -3,6 +3,7 @@ import { collection, getDocs, doc, query, where, writeBatch, type DocumentRefere
 import { ref, deleteObject } from 'firebase/storage'
 import { auth, db, storage } from '@/firebase/config'
 import type { WatchlistItem } from '@/lib/types'
+import { isFirebaseStorageUrl } from '@/lib/image-data'
 
 const FLAT_SUBCOLLECTIONS = ['challenges', 'habitGridHabits', 'habitGridMonths']
 
@@ -18,15 +19,11 @@ const commitInChunks = async (refs: DocumentReference[]) => {
   }
 }
 
-// Tollera "oggetto non trovato" (es. utente senza foto profilo, o copertina già
-// rimossa) senza bloccare il resto della cancellazione account.
+// Pulizia best-effort dei file caricati prima del passaggio a Firestore: le immagini
+// nuove stanno nei documenti stessi (già cancellati). Qualunque errore di Storage (file
+// assente, Storage mai attivato sul progetto) non deve bloccare la cancellazione account.
 const deleteStorageObjectIfExists = async (path: string) => {
-  try {
-    await deleteObject(ref(storage, path))
-  } catch (err) {
-    const code = (err as { code?: string } | undefined)?.code
-    if (code !== 'storage/object-not-found') throw err
-  }
+  await deleteObject(ref(storage, path)).catch(() => {})
 }
 
 export const deleteAccount = async () => {
@@ -48,7 +45,7 @@ export const deleteAccount = async () => {
     itemsSnapshot.docs.forEach((itemDoc) => {
       refsToDelete.push(itemDoc.ref)
       const coverUrl = (itemDoc.data() as WatchlistItem).coverUrl
-      if (coverUrl) coverUrlsToDelete.push(coverUrl)
+      if (coverUrl && isFirebaseStorageUrl(coverUrl)) coverUrlsToDelete.push(coverUrl)
     })
     refsToDelete.push(categoryDoc.ref)
   }

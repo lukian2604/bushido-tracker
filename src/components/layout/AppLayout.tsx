@@ -6,16 +6,23 @@ import { LevelUpModal } from '@/components/ui/LevelUpModal'
 import { useLevelUpWatcher } from '@/hooks/useLevelUpWatcher'
 import { usePublicProfileSync } from '@/hooks/usePublicProfileSync'
 import { useStreakMilestoneWatcher } from '@/hooks/useStreakMilestoneWatcher'
+import { useOnboarding } from '@/hooks/useOnboarding'
+import { OnboardingTour } from '@/components/ui/OnboardingTour'
 
 export const AppLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { levelUpRank, dismiss } = useLevelUpWatcher()
   usePublicProfileSync()
   useStreakMilestoneWatcher()
+  const onboarding = useOnboarding()
 
   return (
     <div className="min-h-screen bg-(--color-ink)">
-      {levelUpRank && <LevelUpModal rank={levelUpRank} onClose={dismiss} />}
+      {onboarding.isOpen ? (
+        <OnboardingTour displayName={onboarding.displayName} onFinish={onboarding.complete} />
+      ) : (
+        levelUpRank && <LevelUpModal rank={levelUpRank} onClose={dismiss} />
+      )}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex min-h-screen flex-col md:pl-64">
         <header className="flex items-center justify-between border-b border-(--color-border) px-4 py-3 md:hidden">

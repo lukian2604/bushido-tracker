@@ -30,6 +30,18 @@ service cloud.firestore {
       return !(key in data) || data[key] == null || (data[key] is list && data[key].size() <= maxLen);
     }
 
+    // Immagini (foto profilo, copertine): o un link http(s) corto, o un JPEG compresso
+    // salvato come data URL (niente Firebase Storage — vedi src/lib/image-data.ts, i
+    // limiti vanno tenuti allineati). Mai SVG/HTML/javascript: solo questi due formati.
+    function isOptionalImageRef(data, key) {
+      return !(key in data) || data[key] == null || (
+        data[key] is string && (
+          (data[key].size() <= 500 && data[key].matches('https?://[^ ]+'))
+          || (data[key].size() <= 100000 && data[key].matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+'))
+        )
+      );
+    }
+
     function pairIdFor(a, b) {
       return a < b ? a + '_' + b : b + '_' + a;
     }
@@ -44,7 +56,7 @@ service cloud.firestore {
       allow create, update: if isOwner(uid)
         && isValidString(request.resource.data.displayName, 50)
         && request.resource.data.email is string
-        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && isOptionalImageRef(request.resource.data, 'photoURL')
         && isOptionalString(request.resource.data, 'country', 2)
         && isOptionalString(request.resource.data, 'username', 20)
         && isOptionalList(request.resource.data, 'dashboardConfig', 20)
@@ -93,7 +105,7 @@ service cloud.firestore {
             && isOptionalString(request.resource.data, 'year', 10)
             && isOptionalString(request.resource.data, 'studio', 100)
             && isOptionalString(request.resource.data, 'author', 100)
-            && isOptionalString(request.resource.data, 'coverUrl', 500)
+            && isOptionalImageRef(request.resource.data, 'coverUrl')
             && request.resource.data.status in ['planToWatch', 'watching', 'completed', 'onHold', 'dropped'];
         }
       }
@@ -137,7 +149,7 @@ service cloud.firestore {
       allow create: if isOwner(uid)
         && isValidString(request.resource.data.displayName, 50)
         && isOptionalString(request.resource.data, 'username', 20)
-        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && isOptionalImageRef(request.resource.data, 'photoURL')
         && request.resource.data.currentStreak is int
         && request.resource.data.currentStreak >= 0
         && request.resource.data.currentStreak < 100000;
@@ -145,7 +157,7 @@ service cloud.firestore {
       allow update: if isOwner(uid)
         && isValidString(request.resource.data.displayName, 50)
         && isOptionalString(request.resource.data, 'username', 20)
-        && isOptionalString(request.resource.data, 'photoURL', 600)
+        && isOptionalImageRef(request.resource.data, 'photoURL')
         && request.resource.data.currentStreak is int
         && request.resource.data.currentStreak >= 0
         && request.resource.data.currentStreak < 100000

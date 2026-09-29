@@ -9,6 +9,8 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaSearchBox } from '@/components/ui/MediaSearchBox'
 import { CoverImage } from '@/components/ui/CoverImage'
+import { ImageLinkInput } from '@/components/ui/ImageLinkInput'
+import { ALLOWED_IMAGE_INPUT_TYPES, MAX_IMAGE_INPUT_BYTES } from '@/lib/image-data'
 import { findDuplicateItem } from '@/lib/watchlist-duplicates'
 import { fetchResultDetails } from '@/services/media-search'
 import {
@@ -71,7 +73,6 @@ const toDatetimeLocal = (timestamp: Timestamp): string => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const EMPTY_FORM = { title: '', year: '', studio: '', author: '', status: 'planToWatch' as WatchlistStatus, coverUrl: '' }
 const EMPTY_CATEGORY_DRAFT = { name: '', mediaType: 'video' as MediaType, emoji: '' }
 
@@ -96,6 +97,7 @@ export const WatchlistPage = () => {
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null)
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [coverError, setCoverError] = useState('')
+  const [isCoverLinkOpen, setIsCoverLinkOpen] = useState(false)
   const [brokenFormCoverUrl, setBrokenFormCoverUrl] = useState('')
   // Titoli alternativi del risultato di ricerca scelto (altre lingue), legati al titolo
   // per cui valgono: se l'utente riscrive il titolo a mano non si usano più.
@@ -221,6 +223,7 @@ export const WatchlistPage = () => {
   }
 
   const onOpenAddItem = () => {
+    setIsCoverLinkOpen(false)
     setForm(EMPTY_FORM)
     setEditingItemId(null)
     setIsItemFormOpen(true)
@@ -233,6 +236,7 @@ export const WatchlistPage = () => {
   }
 
   const onEditItem = (item: WatchlistItem) => {
+    setIsCoverLinkOpen(false)
     setForm({ title: item.title, year: item.year, studio: item.studio, author: item.author || '', status: item.status, coverUrl: item.coverUrl || '' })
     setEditingItemId(item.id)
     setIsItemFormOpen(true)
@@ -262,18 +266,18 @@ export const WatchlistPage = () => {
     if (!file || !user) return
     setCoverError('')
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    if (!ALLOWED_IMAGE_INPUT_TYPES.includes(file.type)) {
       setCoverError(t('profile.photoErrorType'))
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_INPUT_BYTES) {
       setCoverError(t('profile.photoErrorSize'))
       return
     }
 
     setIsUploadingCover(true)
     try {
-      const coverUrl = await uploadItemCover(user.uid, file)
+      const coverUrl = await uploadItemCover(file)
       setForm((current) => ({ ...current, coverUrl }))
     } catch {
       setCoverError(t('profile.photoErrorGeneric'))
@@ -536,9 +540,12 @@ export const WatchlistPage = () => {
                 <input
                   ref={coverInputRef}
                   type="file"
-                  accept={ALLOWED_IMAGE_TYPES.join(',')}
+                  accept={ALLOWED_IMAGE_INPUT_TYPES.join(',')}
                   className="hidden"
-                  onChange={(event) => onCoverFileSelected(event.target.files?.[0])}
+                  onChange={(event) => {
+                    onCoverFileSelected(event.target.files?.[0])
+                    event.target.value = ''
+                  }}
                 />
                 <div className="flex flex-col items-start gap-1">
                   <button
@@ -549,6 +556,24 @@ export const WatchlistPage = () => {
                   >
                     {isUploadingCover ? t('profile.photoUploading') : t('watchlist.uploadCoverButton')}
                   </button>
+                  {isCoverLinkOpen ? (
+                    <ImageLinkInput
+                      onApply={(url) => {
+                        setCoverError('')
+                        setForm((current) => ({ ...current, coverUrl: url }))
+                        setIsCoverLinkOpen(false)
+                      }}
+                      onCancel={() => setIsCoverLinkOpen(false)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsCoverLinkOpen(true)}
+                      className="text-xs text-(--color-parchment-muted) hover:text-(--color-gold)"
+                    >
+                      {t('image.useLink')}
+                    </button>
+                  )}
                   {form.coverUrl && (
                     <button
                       type="button"
