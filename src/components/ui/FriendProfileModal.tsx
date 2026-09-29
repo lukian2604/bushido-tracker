@@ -14,7 +14,7 @@ interface FriendProfileModalProps {
 // Profilo, ma solo con i dati di publicProfiles (nome, username, foto, streak).
 // Niente check-in totali/email/abitudini: non fanno parte dei dati condivisi.
 export const FriendProfileModal = ({ profile, onClose }: FriendProfileModalProps) => {
-  const { t } = useTranslation()
+  const { t, tp } = useTranslation()
   const streak = profile.currentStreak || 0
   const rank = rankForStreak(streak)
   const next = nextRank(rank)
@@ -86,7 +86,7 @@ export const FriendProfileModal = ({ profile, onClose }: FriendProfileModalProps
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-(--color-ink-40)">
-                  {t('ranks.nextRankIn').replace('{days}', String(daysToNext))}
+                  {tp('ranks.nextRankIn', daysToNext ?? 0).replace('{days}', String(daysToNext))}
                 </p>
               </div>
             ) : (

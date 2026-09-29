@@ -142,7 +142,6 @@ export default {
   'challenge.empty': 'まだ武者修行がありません。上で最初の試練を鍛えましょう。',
   'challenge.modeAutoBadge': '自動',
   'challenge.modeManualBadge': '手動',
-  'challenge.daysSuffix': '日',
   'challenge.confirmDelete': 'この武者修行を削除しますか？元に戻せません。',
 
   'habitGrid.heading': '習慣グリッド',

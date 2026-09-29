@@ -15,7 +15,7 @@ interface ChallengeCalendarModalProps {
 // Solo visualizzazione — per modificare lo stato di un giorno passato si usa
 // ChallengeEditDayModal (pulsante "Modifica altri giorni" separato).
 export const ChallengeCalendarModal = ({ challenge, completedCount, onClose }: ChallengeCalendarModalProps) => {
-  const { t, locale } = useTranslation()
+  const { t, locale, tp } = useTranslation()
   const localeTag = BCP47_LOCALES[locale] || 'en-US'
   const [activeDateKey, setActiveDateKey] = useState<string | null>(null)
   const isAuto = challenge.mode === 'auto'
@@ -47,7 +47,7 @@ export const ChallengeCalendarModal = ({ challenge, completedCount, onClose }: C
           <div>
             <h3 className="font-accent text-lg font-semibold text-(--color-parchment)">{challenge.name}</h3>
             <p className="mt-0.5 text-xs text-(--color-parchment-muted)">
-              {challenge.startDate} → {challenge.endDate} · {completedCount}/{dateKeys.length} {t('challenge.daysSuffix')}
+              {challenge.startDate} → {challenge.endDate} · {completedCount}/{dateKeys.length} {tp('common.days', dateKeys.length)}
             </p>
           </div>
           <button

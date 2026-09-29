@@ -22,7 +22,7 @@ import type { Habit, HabitMonthDoc } from '@/lib/types'
 
 export const HabitGridPage = () => {
   const { user } = useAuth()
-  const { t, locale } = useTranslation()
+  const { t, locale, tp } = useTranslation()
   const { confirmDialog } = useModal()
   const localeTag = BCP47_LOCALES[locale] || 'en-US'
 
@@ -155,7 +155,7 @@ export const HabitGridPage = () => {
                             style={{ color: streak >= 5 ? color : 'var(--color-ink-40)' }}
                           >
                             {streak > 0 && <FireIcon className="size-2.5" />}
-                            {streak > 0 ? `${streak} ${t('common.days')}` : '—'}
+                            {streak > 0 ? `${streak} ${tp('common.days', streak)}` : '—'}
                           </span>
                         </button>
                       </th>
@@ -242,7 +242,7 @@ export const HabitGridPage = () => {
                       </p>
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-(--color-ink-40)" style={streak >= 5 ? { color } : undefined}>
                         {streak > 0 && <FireIcon className="size-3" />}
-                        {streak > 0 ? `${streak} ${t('common.days')}` : t('habitGrid.noStreak')}
+                        {streak > 0 ? `${streak} ${tp('common.days', streak)}` : t('habitGrid.noStreak')}
                       </p>
                     </button>
                     <button

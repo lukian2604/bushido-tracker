@@ -24,7 +24,7 @@ import type { FirebaseError } from 'firebase/app'
 
 export const ProfilePage = () => {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, tp } = useTranslation()
   const navigate = useNavigate()
 
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null)
@@ -240,7 +240,7 @@ export const ProfilePage = () => {
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-(--color-ink-40)">
-                  {t('ranks.nextRankIn').replace('{days}', String(daysToNext))}
+                  {tp('ranks.nextRankIn', daysToNext ?? 0).replace('{days}', String(daysToNext))}
                 </p>
               </div>
             ) : (

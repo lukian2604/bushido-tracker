@@ -17,6 +17,7 @@ export default {
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.days': 'days',
+  'common.days.one': 'day',
 
   'home.eyebrow': 'The Way of the Tracker',
   'home.heading': 'Forge discipline. Track everything.',
@@ -141,7 +142,6 @@ export default {
   'challenge.empty': 'No challenges yet. Forge your first trial above.',
   'challenge.modeAutoBadge': 'Auto',
   'challenge.modeManualBadge': 'Manual',
-  'challenge.daysSuffix': 'days',
   'challenge.confirmDelete': 'Delete this challenge? This cannot be undone.',
 
   'habitGrid.heading': 'Habit Grid',
@@ -232,6 +232,7 @@ export default {
   'ranks.streakLabel': 'Current streak',
   'ranks.checkinsLabel': 'Total check-ins',
   'ranks.nextRankIn': 'Next rank in {days} days',
+  'ranks.nextRankIn.one': 'Next rank in {days} day',
   'ranks.maxRank': 'Maximum rank reached',
   'ranks.progressLabel': 'Progress',
   'ranks.ronin.range': '0–6 day streak',

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { detectLocale, translate, type Locale } from '@/i18n'
+import { detectLocale, translate, translatePlural, type Locale } from '@/i18n'
 
 const STORAGE_KEY = 'locale'
 
@@ -7,6 +7,7 @@ interface LocaleContextValue {
   locale: Locale
   setLocale: (locale: Locale) => void
   t: (key: string) => string
+  tp: (key: string, count: number) => string
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
@@ -27,8 +28,9 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const t = useCallback((key: string) => translate(locale, key), [locale])
+  const tp = useCallback((key: string, count: number) => translatePlural(locale, key, count), [locale])
 
-  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t])
+  const value = useMemo(() => ({ locale, setLocale, t, tp }), [locale, setLocale, t, tp])
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

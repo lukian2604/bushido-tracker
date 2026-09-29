@@ -41,7 +41,7 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 export const DashboardPage = () => {
   const { user } = useAuth()
-  const { t, locale } = useTranslation()
+  const { t, locale, tp } = useTranslation()
   const localeTag = BCP47_LOCALES[locale] || 'en-US'
   const isMobile = useIsMobile()
   const isDesktop = !useIsMobile(1024)
@@ -368,7 +368,7 @@ export const DashboardPage = () => {
             <p className="mt-1 text-sm text-(--color-parchment-muted)">
               {todayLabel}
               {currentStreak > 0 && (
-                <> — {t('dashboard.streakRollPrefix')} <span className="font-semibold text-(--color-gold)">{currentStreak} {t('dashboard.streakRollSuffix')}</span></>
+                <> — {t('dashboard.streakRollPrefix')} <span className="font-semibold text-(--color-gold)">{currentStreak} {tp('dashboard.streakRollSuffix', currentStreak)}</span></>
               )}
             </p>
           </div>
@@ -421,7 +421,7 @@ export const DashboardPage = () => {
           iconColor="var(--color-gold)"
           label={t('dashboard.statCurrentStreak')}
           value={currentStreak}
-          unit={t('common.days')}
+          unit={tp('common.days', currentStreak)}
           delta={`${currentStreak - lastWeekStreak >= 0 ? '+' : ''}${currentStreak - lastWeekStreak} ${t('dashboard.statVsLastWeek')}`}
           trend={currentStreak === lastWeekStreak ? 'neutral' : currentStreak > lastWeekStreak ? 'good' : 'bad'}
         />

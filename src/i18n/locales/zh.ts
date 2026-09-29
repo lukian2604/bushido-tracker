@@ -142,7 +142,6 @@ export default {
   'challenge.empty': '还没有挑战。在上方锻造你的第一个试炼吧。',
   'challenge.modeAutoBadge': '自动',
   'challenge.modeManualBadge': '手动',
-  'challenge.daysSuffix': '天',
   'challenge.confirmDelete': '删除这个挑战吗？此操作无法撤销。',
 
   'habitGrid.heading': '习惯网格',
@@ -250,7 +249,7 @@ export default {
   'onboarding.startHabits': '创建第一个习惯',
   'profile.replayTour': '重看欢迎导览',
   'watchlist.coverUnavailable': '来源封面无法加载 — 你可以上传自己的封面。',
-  'watchlist.duplicateItem': '「{title}」已经在这个收藏中了。',
+  'watchlist.duplicateItem': '“{title}”已经在这个收藏夹中了。',
 
   'watchlist.addCollectionCard': '新建收藏夹',
   'watchlist.emojiHint': '输入或粘贴任意表情符号——下面的只是快捷选项。',
@@ -343,7 +342,7 @@ export default {
   'profile.accountTitle': '账户',
   'profile.nameLabel': '显示名称',
   'profile.usernameLabel': '用户名',
-  'profile.usernameHint': '一个唯一标识，方便其他武者在「好友」中找到你。可选。',
+  'profile.usernameHint': '一个唯一标识，方便其他武者在“好友”中找到你。可选。',
   'profile.usernameNotSet': '未设置',
   'profile.emailLabel': '电子邮箱',
   'profile.countryLabel': '国家/地区',

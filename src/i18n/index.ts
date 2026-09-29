@@ -33,7 +33,7 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   de: '🇩🇪',
   ja: '🇯🇵',
   zh: '🇨🇳',
-  pt: '🇵🇹',
+  pt: '🇧🇷',
 }
 
 export const DEFAULT_LOCALE: Locale = 'en'
@@ -45,4 +45,19 @@ export const detectLocale = (): Locale => {
 
 export const translate = (locale: Locale, key: string): string => {
   return LOCALES[locale]?.[key] || LOCALES[DEFAULT_LOCALE][key] || key
+}
+
+// Plurali: la forma giusta per il numero secondo le regole della lingua (Intl.PluralRules:
+// 1 day / 2 days, 1 день / 2 дня / 5 дней). Le varianti stanno in `${key}.one`,
+// `${key}.few`, `${key}.many`; la chiave base è la forma generale ("other"), usata quando
+// la lingua non ha una variante specifica (giapponese/cinese non ne hanno). Mai ripiego
+// sull'inglese se la lingua ha la chiave base: sarebbe una parola nella lingua sbagliata.
+export const translatePlural = (locale: Locale, key: string, count: number): string => {
+  const pick = (candidate: Locale) => {
+    const strings = LOCALES[candidate]
+    if (!strings?.[key]) return undefined
+    const category = new Intl.PluralRules(candidate).select(count)
+    return strings[`${key}.${category}`] || strings[key]
+  }
+  return (pick(locale) || pick(DEFAULT_LOCALE) || key).replace(/\{count\}/g, String(count))
 }

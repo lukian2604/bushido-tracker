@@ -26,7 +26,7 @@ const MODES: ChallengeMode[] = ['manual', 'auto']
 
 export const ChallengePage = () => {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, tp } = useTranslation()
   const { confirmDialog } = useModal()
 
   const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -255,7 +255,7 @@ export const ChallengePage = () => {
                     {percent}%
                   </span>
                   <span className="text-xs tabular-nums text-(--color-parchment-muted)">
-                    {completedCount} / {totalCount} {t('challenge.daysSuffix')}
+                    {completedCount} / {totalCount} {tp('common.days', totalCount)}
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-(--color-ink-15)">
