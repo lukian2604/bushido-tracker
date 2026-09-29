@@ -7,8 +7,9 @@ import de from './locales/de'
 import ja from './locales/ja'
 import zh from './locales/zh'
 import pt from './locales/pt'
+import ptPT from './locales/pt-PT'
 
-export const LOCALES = { en, it, ru, es, fr, de, ja, zh, pt } as Record<string, Record<string, string>>
+export const LOCALES = { en, it, ru, es, fr, de, ja, zh, pt, 'pt-PT': ptPT } as Record<string, Record<string, string>>
 
 export type Locale = keyof typeof LOCALES
 
@@ -21,7 +22,8 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   de: 'Deutsch',
   ja: '日本語',
   zh: '中文',
-  pt: 'Português',
+  pt: 'Português (Brasil)',
+  'pt-PT': 'Português (Portugal)',
 }
 
 export const LOCALE_FLAGS: Record<Locale, string> = {
@@ -34,12 +36,17 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   ja: '🇯🇵',
   zh: '🇨🇳',
   pt: '🇧🇷',
+  'pt-PT': '🇵🇹',
 }
 
 export const DEFAULT_LOCALE: Locale = 'en'
 
 export const detectLocale = (): Locale => {
-  const browserLanguage = (navigator.language || 'en').slice(0, 2)
+  const fullLanguage = navigator.language || 'en'
+  const browserLanguage = fullLanguage.slice(0, 2)
+  // Portoghese: brasiliano per pt-BR (e "pt" senza paese), europeo per tutte le altre
+  // varianti (pt-PT, pt-AO, pt-MZ… seguono la norma europea).
+  if (browserLanguage === 'pt') return /^pt-BR$/i.test(fullLanguage) || fullLanguage === 'pt' ? 'pt' : 'pt-PT'
   return browserLanguage in LOCALES ? (browserLanguage as Locale) : DEFAULT_LOCALE
 }
 

@@ -26,7 +26,7 @@ export default {
   'home.ctaBegin': 'Начни свой путь',
   'home.ctaLearn': 'Узнать, как это работает',
   'home.badgeFree': 'Всегда бесплатно',
-  'home.badgeLanguages': '9 языков',
+  'home.badgeLanguages': '10 языков',
   'home.badgeThemes': '18 тем',
   'home.featuresEyebrow': 'Что можно отслеживать',
   'home.featuresHeading': 'Всё в одном месте',

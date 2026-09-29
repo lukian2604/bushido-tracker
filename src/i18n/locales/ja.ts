@@ -24,7 +24,7 @@ export default {
   'home.ctaBegin': '道を始める',
   'home.ctaLearn': '使い方を見る',
   'home.badgeFree': 'ずっと無料',
-  'home.badgeLanguages': '9言語対応',
+  'home.badgeLanguages': '10言語対応',
   'home.badgeThemes': '18種類のテーマ',
   'home.featuresEyebrow': '記録できること',
   'home.featuresHeading': 'すべてが一つの場所に',

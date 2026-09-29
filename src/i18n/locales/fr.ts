@@ -25,7 +25,7 @@ export default {
   'home.ctaBegin': 'Commence ton chemin',
   'home.ctaLearn': 'Voir comment ça marche',
   'home.badgeFree': 'Toujours gratuit',
-  'home.badgeLanguages': '9 langues',
+  'home.badgeLanguages': '10 langues',
   'home.badgeThemes': '18 thèmes',
   'home.featuresEyebrow': 'Ce que tu peux suivre',
   'home.featuresHeading': 'Tout au même endroit',

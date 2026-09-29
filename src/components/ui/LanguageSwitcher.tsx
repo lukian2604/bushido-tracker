@@ -64,7 +64,7 @@ export const LanguageSwitcher = () => {
           ref={menuRef}
           role="listbox"
           style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left }}
-          className="z-50 max-h-80 w-45 overflow-y-auto rounded-xl border border-(--color-border) bg-(--color-surface) p-1.5 shadow-xl"
+          className="z-50 max-h-80 w-56 overflow-y-auto rounded-xl border border-(--color-border) bg-(--color-surface) p-1.5 shadow-xl"
         >
           {Object.entries(LOCALE_LABELS).map(([code, label]) => (
             <li key={code} role="presentation">

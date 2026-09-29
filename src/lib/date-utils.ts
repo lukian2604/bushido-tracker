@@ -35,5 +35,5 @@ export const formatRelativeTime = (date: Date, localeTag: string): string => {
 }
 
 export const BCP47_LOCALES: Record<string, string> = {
-  en: 'en-US', it: 'it-IT', ru: 'ru-RU', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', ja: 'ja-JP', zh: 'zh-CN', pt: 'pt-PT',
+  en: 'en-US', it: 'it-IT', ru: 'ru-RU', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', ja: 'ja-JP', zh: 'zh-CN', pt: 'pt-BR', 'pt-PT': 'pt-PT',
 }

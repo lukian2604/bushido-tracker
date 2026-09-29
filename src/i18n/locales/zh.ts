@@ -24,7 +24,7 @@ export default {
   'home.ctaBegin': '开始你的道路',
   'home.ctaLearn': '查看使用方法',
   'home.badgeFree': '永久免费',
-  'home.badgeLanguages': '支持9种语言',
+  'home.badgeLanguages': '支持10种语言',
   'home.badgeThemes': '18种主题',
   'home.featuresEyebrow': '你可以记录的内容',
   'home.featuresHeading': '一切尽在一处',
